@@ -4,6 +4,9 @@ Procedures are most useful when an agent can call them by name. Jazari ships a
 transport-neutral handler; **you own the tool.**
 
 ```ruby
+require "jazari"
+require "jazari/mcp/handler"   # opt-in: not loaded by `require "jazari"`
+
 Jazari::Mcp::Handler.new.call(action: "get", target: target)
 # => { ok: true, state: "default", topic: "...", progress: {...}, last_run: {...} }
 ```

@@ -68,8 +68,31 @@ class McpActionsTest < Minitest::Test
   end
 
   # The MCP layer is optional: descriptors load, the dispatcher does not.
-  def test_the_handler_is_not_loaded_by_default
-    loaded = $LOADED_FEATURES.grep(/jazari\/mcp\/actions/)
-    refute_empty loaded, "descriptors are cheap and always available"
+  #
+  # Checked in a CLEAN SUBPROCESS on purpose. A sibling test in this file
+  # requires the handler, so an in-process $LOADED_FEATURES check would pass or
+  # fail depending on test order — proving nothing.
+  def test_only_the_descriptors_load_by_default
+    script = <<~RUBY
+      require "jazari"
+      puts $LOADED_FEATURES.grep(%r{jazari/mcp/actions}).any?
+      puts $LOADED_FEATURES.grep(%r{jazari/mcp/handler}).any?
+    RUBY
+    out = IO.popen([ "ruby", "-I", "lib", "-e", script ], &:read)
+    actions_loaded, handler_loaded = out.split("\n")
+
+    assert_equal "true", actions_loaded, "descriptors are cheap and always available"
+    assert_equal "false", handler_loaded, "the dispatcher must stay opt-in"
+  end
+
+  # ...and requiring it explicitly must work on its own, without `jazari` having
+  # pulled Actions in first.
+  def test_the_handler_can_be_required_standalone
+    script = <<~RUBY
+      require "jazari/mcp/handler"
+      puts Jazari::Mcp::Handler.actions_for(:read).inspect
+    RUBY
+    out = IO.popen([ "ruby", "-I", "lib", "-e", script ], &:read)
+    assert_includes out, "get", "requiring the handler alone must not NameError"
   end
 end

@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# The handler dispatches against Mcp::Actions, so it must require it: a host may
+# `require "jazari/mcp/handler"` on its own now that this layer is opt-in.
+require "jazari/mcp/actions"
+
 module Jazari
   module Mcp
     # Transport-neutral adapter between an MCP action name and the domain.
