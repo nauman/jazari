@@ -85,6 +85,24 @@ module Jazari
       resolve(target: target)
     end
 
+    # A host calls this from its own after-commit when a subject is destroyed.
+    #
+    # Jazari cannot hook the host's model itself: the subject may live in a
+    # different logical database, so no cross-database foreign key is claimed
+    # and no cascade exists. The host calls in; the gem cleans up.
+    #
+    # Runs are deliberately PRESERVED. A run is an audit record of something
+    # that actually happened, and deleting the subject does not un-happen it.
+    # Their subject columns keep pointing at the departed record — which is
+    # sound precisely because no FK was ever claimed.
+    def forget_subject(subject)
+      runbook = Runbook.find_by(runbookable: subject)
+      runbook&.destroy!
+      subject.destroy! if subject.is_a?(Anchor) && subject.persisted?
+      Jazari.config.on_subject_destroyed&.call(subject)
+      true
+    end
+
     # -- internals ---------------------------------------------------------
 
     # A queue is a stable name for a ritual, and a ritual has exactly one

@@ -191,6 +191,23 @@ Jazari::AnchorTarget.new(scope_type: "Tree", scope_id: 7, key: "node-x", ...)
 node, a file path, a DNS zone. Register the scope at boot; unregistered scopes
 fail closed.
 
+## Deleting a subject
+
+Jazari cannot hook your models — a subject may live in a different logical
+database, so no cross-database foreign key is claimed and no cascade exists.
+Call in from your own `after_commit`:
+
+```ruby
+class Site < ApplicationRecord
+  after_commit :forget_jazari, on: :destroy
+  def forget_jazari = Jazari.forget_subject(self)
+end
+```
+
+That removes the subject's runbook. **Runs are deliberately preserved** — a run
+records something that actually happened, and deleting the subject does not
+un-happen it.
+
 ## PostgreSQL only
 
 The guarantees lean on Postgres: `jsonb`, `timestamptz`, four CHECK constraints,

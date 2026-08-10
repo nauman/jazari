@@ -124,5 +124,9 @@ module Jazari
     def reset(target:, expected_revision:)
       Operations.reset(target: target, expected_revision: expected_revision)
     end
+
+    # Call from the host's after-commit when a subject is destroyed. See
+    # Operations.forget_subject — runs survive on purpose.
+    def forget_subject(subject) = Operations.forget_subject(subject)
   end
 end

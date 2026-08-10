@@ -244,3 +244,59 @@ class OperationsAnchorReadPathTest < Minitest::Test
     end
   end
 end
+
+class ForgetSubjectTest < Minitest::Test
+  def setup
+    Jazari::Run.delete_all
+    Jazari::Runbook.delete_all
+    Jazari::Anchor.delete_all
+    Jazari::RecipeRecord.delete_all
+    DummySubject.delete_all
+    Jazari.configure { |c| c.anchor_scopes = { "Tree" => nil }; c.on_subject_destroyed = nil }
+    Jazari::RecipeRegistry.seed!([ { id: "canon.v1", topic: "T",
+      checklist: [ { id: "a", text: "A", done: false } ] } ])
+    @subject = DummySubject.create!(name: "doomed")
+  end
+
+  def target
+    Jazari::RecordTarget.new(runbookable: @subject, public_reference: {}, recipe_id: "canon.v1")
+  end
+
+  def test_forgetting_a_subject_removes_its_runbook
+    r = Jazari::Operations.resolve(target: target)
+    Jazari::Operations.customize(target: target, expected_revision: r.revision,
+                                 topic: "Ours", description: "", checklist: [])
+    assert_equal 1, Jazari::Runbook.count
+
+    Jazari.forget_subject(@subject)
+    assert_equal 0, Jazari::Runbook.count
+  end
+
+  # A run records something that actually happened. Deleting the subject does
+  # not un-happen it, so the audit trail must survive.
+  def test_runs_survive_the_subject_they_belonged_to
+    run = Jazari::Runs.open(target: target, actor_ref: "a")[:run]
+    Jazari::Runs.close(run: run, expected_revision: run.lock_version, outcome: "completed")
+
+    Jazari.forget_subject(@subject)
+    @subject.destroy!
+
+    surviving = Jazari::Run.find_by(id: run.id)
+    refute_nil surviving, "an audit record must outlive its subject"
+    assert_equal "completed", surviving.outcome
+    assert_equal "DummySubject", surviving.subject_type
+  end
+
+  def test_the_host_callback_is_invoked
+    seen = []
+    Jazari.configure { |c| c.on_subject_destroyed = ->(s) { seen << s } }
+    Jazari.forget_subject(@subject)
+    assert_equal [ @subject ], seen
+  ensure
+    Jazari.configure { |c| c.on_subject_destroyed = nil }
+  end
+
+  def test_forgetting_a_subject_with_no_runbook_is_a_no_op
+    assert Jazari.forget_subject(@subject)
+  end
+end
