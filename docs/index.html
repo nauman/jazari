@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jazari — operating procedures you can call</title>
+<meta name="description" content="Recipes as data, per-subject runbooks, named queues, and per-run evidence for Rails. So &quot;did last night's run actually complete?&quot; is a query, not a guess.">
+<meta property="og:title" content="Jazari">
+<meta property="og:description" content="Operating procedures you can call, instead of documents you hope someone reads.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#12181f; --frost:#eef2f5; --paper:#fff; --wash:#f6f9fb;
+  --ice:#2f7fb0; --ice-d:#1f5c82; --ice-soft:#dcedf5;
+  --teal:#2f9e8f; --amber:#e07a3f; --rose:#d97a8c; --violet:#8b5cf6;
+  --line:#dbe3e8; --muted:#7c8791; --soft:#3a434c;
+  --disp:"Libre Baskerville",Georgia,"Times New Roman",serif;
+  --ui:"Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+:root[data-theme="dark"]{
+  --ink:#eef2f5; --frost:#12181f; --paper:#1a2129; --wash:#151b22;
+  --ice:#5fa8d8; --ice-d:#8cc2e6; --ice-soft:#1e3040;
+  --line:#2a343d; --muted:#8f9aa4; --soft:#c3cbd2;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ink:#eef2f5; --frost:#12181f; --paper:#1a2129; --wash:#151b22;
+    --ice:#5fa8d8; --ice-d:#8cc2e6; --ice-soft:#1e3040;
+    --line:#2a343d; --muted:#8f9aa4; --soft:#c3cbd2;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--frost);color:var(--ink);font-family:var(--ui);
+  line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:920px;margin:0 auto;padding:0 22px}
+h1,h2,h3{margin:0;font-weight:400}
+h1{font-family:var(--disp);font-size:clamp(32px,6.4vw,56px);line-height:1.08;letter-spacing:-.015em}
+h2{font-family:var(--disp);font-size:clamp(22px,3.6vw,30px);margin:0 0 14px}
+h3{font:700 15px/1.3 var(--ui)}
+p{margin:0 0 14px}
+.eyebrow{font:600 11px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ice-d)}
+.lede{font-size:clamp(16px,2.2vw,19px);color:var(--soft);max-width:62ch}
+.muted{color:var(--muted)}
+code{font:500 12.5px var(--mono);background:var(--wash);border:1px solid var(--line);
+  border-radius:6px;padding:1px 6px}
+pre{background:var(--paper);border:1px solid var(--line);border-radius:14px;
+  padding:18px;overflow-x:auto;font:500 12.5px/1.7 var(--mono);margin:0 0 16px}
+pre code{background:0 0;border:0;padding:0;font-size:inherit}
+a{color:var(--ice-d)}
+.k{color:var(--violet)} .s{color:var(--teal)} .c{color:var(--muted);font-style:italic}
+.hl{color:var(--amber)}
+
+/* hero */
+.hero{position:relative;padding:64px 0 44px;overflow:hidden;isolation:isolate}
+.mesh{position:absolute;inset:-25%;z-index:-1;opacity:.5;
+  background:
+    radial-gradient(38vw 38vw at 20% 26%, #bcd9ea, transparent 62%),
+    radial-gradient(42vw 42vw at 80% 16%, #cfe4dd, transparent 62%),
+    radial-gradient(44vw 44vw at 58% 92%, #efdcc8, transparent 62%);
+  animation:drift 26s ease-in-out infinite alternate}
+:root[data-theme="dark"] .mesh{opacity:.2}
+@keyframes drift{to{transform:translate3d(0,-3%,0) scale(1.1)}}
+.grain{position:fixed;inset:0;pointer-events:none;z-index:9;opacity:.04;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.kin span{display:inline-block;opacity:0;transform:translateY(.5em);
+  animation:rise .7s var(--ease) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border-radius:999px;
+  font:600 14px var(--ui);text-decoration:none;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--frost);border-color:var(--ink)}
+.btn:hover{border-color:var(--ice)}
+
+/* sections */
+section{padding:44px 0;border-top:1px solid var(--line)}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px}
+.grid{display:grid;gap:14px}
+@media(min-width:700px){.grid.two{grid-template-columns:1fr 1fr}}
+
+/* layer stack */
+.stack{display:grid;gap:10px;margin:20px 0}
+.layer{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;
+  padding:15px 18px;border-radius:14px;border:1px solid var(--line);background:var(--paper);
+  opacity:.3;transform:translateX(-8px);transition:all .5s var(--ease)}
+.layer.on{opacity:1;transform:none;box-shadow:0 8px 26px rgba(18,24,31,.07)}
+.layer .n{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+  font:600 12px var(--mono);color:#fff}
+.l1 .n{background:var(--amber)} .l2 .n{background:var(--teal)}
+.l3 .n{background:var(--ice)}   .l4 .n{background:var(--rose)}
+.l1.on{border-color:var(--amber)} .l2.on{border-color:var(--teal)}
+.l3.on{border-color:var(--ice)}   .l4.on{border-color:var(--rose)}
+.layer p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+.ctl{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;
+  font:600 13px var(--ui);border:1px solid var(--line);background:var(--paper);
+  color:var(--ink);cursor:pointer}
+.ctl:hover{border-color:var(--ice);color:var(--ice-d)}
+
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.scroller{overflow-x:auto}
+
+.note{border-left:3px solid var(--ice);background:var(--ice-soft);
+  border-radius:0 12px 12px 0;padding:16px 18px;margin:16px 0}
+.note p:last-child{margin:0}
+figure{margin:20px 0}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font:12px var(--mono);color:var(--muted);margin-top:10px}
+footer{padding:36px 0 60px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.themebtn{position:fixed;right:16px;top:16px;z-index:10;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink);border-radius:999px;min-height:44px;padding:0 16px;
+  font:600 12px var(--ui);cursor:pointer}
+@media(prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none;transition:none}
+  .kin span{opacity:1;transform:none;animation:none}
+  .mesh{animation:none} .layer{opacity:1;transform:none;transition:none}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<button class="themebtn" id="theme" type="button">Theme</button>
+
+<header class="hero">
+  <div class="mesh" aria-hidden="true"></div>
+  <div class="wrap">
+    <p class="eyebrow">Ruby · Rails · PostgreSQL</p>
+    <h1 class="kin">Procedures you can call.</h1>
+    <p class="lede" style="margin-top:18px">
+      Not documents you hope someone reads. Recipes as data, per-subject runbooks,
+      stable names for rituals that outlive any record, and per-run evidence — so
+      <em>“did last night’s run actually complete?”</em> is a query, not a guess.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/nauman/jazari">GitHub</a>
+      <a class="btn" href="https://github.com/nauman/jazari#thirty-seconds">Thirty-second example</a>
+      <a class="btn" href="#why">Why “Jazari”?</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <h2 class="reveal">The problem</h2>
+    <p class="reveal">You have a procedure. Verify a backup by restoring it. Provision a server.
+      Triage an alert before waking anyone. It <em>is</em> written down. And so:</p>
+    <div class="grid two reveal">
+      <div class="card">
+        <h3>Nothing can check it off</h3>
+        <p class="muted">So nobody knows how far a run got — or whether it got anywhere.</p>
+      </div>
+      <div class="card">
+        <h3>Nothing knows it is current</h3>
+        <p class="muted">A document rots silently. It never tells you it is out of date.</p>
+      </div>
+      <div class="card">
+        <h3>Nothing records what happened</h3>
+        <p class="muted">Who ran it, when, what they saw. A checkbox is not evidence.</p>
+      </div>
+      <div class="card">
+        <h3>An agent cannot call it</h3>
+        <p class="muted">It has no name — only a location. So it improvises instead.</p>
+      </div>
+    </div>
+    <div class="note reveal">
+      <p>The usual fix is a checklist attached to a record. That helps, then runs out:
+      some procedures belong to <strong>no record at all</strong>, and a checklist you
+      <code>reset</code> to run again has just destroyed the evidence it ever ran.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="reveal">Four layers</h2>
+    <p class="reveal muted">Each answers a question the one above it cannot.</p>
+    <div class="stack reveal" id="stack">
+      <div class="layer l1"><div class="n">1</div><div>
+        <h3>Recipe — the canon</h3>
+        <p>How this ritual is done. Data, not code: operator-editable at runtime and
+           digest-versioned, so fixing a procedure is a write, not a deploy.</p></div></div>
+      <div class="layer l2"><div class="n">2</div><div>
+        <h3>Runbook — one subject’s override</h3>
+        <p>How <em>this</em> record differs. Materialised on first edit; reading a
+           default writes nothing at all.</p></div></div>
+      <div class="layer l3"><div class="n">3</div><div>
+        <h3>Queue — a name you can always call</h3>
+        <p>For rituals that belong to no record. The name is the contract, so whatever
+           carries the truth today can move without breaking the call.</p></div></div>
+      <div class="layer l4"><div class="n">4</div><div>
+        <h3>Run — one execution</h3>
+        <p>Who, when, which ticks, what evidence. The layer most systems skip — and the
+           one that makes the opening question answerable.</p></div></div>
+    </div>
+    <button class="ctl" id="play" type="button">Replay</button>
+    <p class="muted reveal" style="margin-top:18px">Most systems stop at the second. The third makes a
+       procedure <strong>callable</strong>; the fourth makes it <strong>auditable</strong>.</p>
+  </section>
+
+  <section>
+    <h2 class="reveal">Idempotency belongs to the ritual</h2>
+    <p class="reveal">Verifying a backup should happen once a day. Triaging an incident may happen
+       five times. So there is no global rule — each recipe declares its own.</p>
+    <div class="scroller reveal">
+      <table>
+        <thead><tr><th>run_policy</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td><code>unrestricted</code></td><td>every <code>open_run</code> starts a run</td></tr>
+          <tr><td><code>once_per_calendar_day</code></td><td>one run per recipe + subject + <strong>UTC</strong> day</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure class="reveal">
+      <svg viewBox="0 0 700 220" role="img" aria-label="open_run inserts first, catches the unique violation, and returns the existing run">
+        <rect x="6" y="86" width="120" height="48" rx="9" fill="var(--paper)" stroke="var(--line)"/>
+        <text x="66" y="107" text-anchor="middle" font-family="var(--ui)" font-size="12" fill="var(--ink)">a retrying cron</text>
+        <text x="66" y="123" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--ice-d)">open_run</text>
+        <path d="M126 110 L178 110" stroke="var(--line)" stroke-width="2" marker-end="url(#a)"/>
+        <rect x="178" y="80" width="150" height="60" rx="9" fill="var(--paper)" stroke="var(--line)"/>
+        <text x="253" y="103" text-anchor="middle" font-family="var(--ui)" font-size="12" fill="var(--ink)">INSERT first</text>
+        <text x="253" y="122" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--muted)">find-then-insert races</text>
+        <path d="M328 96 L410 56" stroke="var(--line)" stroke-width="2" marker-end="url(#a)"/>
+        <path d="M328 126 L410 168" stroke="var(--line)" stroke-width="2" marker-end="url(#a)"/>
+        <rect x="410" y="24" width="284" height="56" rx="9" fill="var(--paper)" stroke="var(--teal)" opacity=".9"/>
+        <text x="426" y="46" font-family="var(--ui)" font-size="12" fill="var(--ink)">new run opened</text>
+        <text x="426" y="65" font-family="var(--mono)" font-size="10" fill="var(--muted)">created: true</text>
+        <rect x="410" y="140" width="284" height="66" rx="9" fill="var(--paper)" stroke="var(--rose)" opacity=".9"/>
+        <text x="426" y="162" font-family="var(--ui)" font-size="12" fill="var(--ink)">returns the existing run</text>
+        <text x="426" y="181" font-family="var(--mono)" font-size="10" fill="var(--muted)">created: false, idempotent_reuse: true</text>
+        <text x="426" y="198" font-family="var(--mono)" font-size="10" fill="var(--muted)">the cron converges — it does not error</text>
+        <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="var(--line)"/></marker></defs>
+      </svg>
+      <figcaption>Enforced by a partial unique index, not application logic.</figcaption>
+    </figure>
+    <div class="note reveal">
+      <p><strong>Two details that are easy to get wrong.</strong> The index <code>COALESCE</code>s the
+      nullable polymorphic subject — otherwise queue runs are unconstrained entirely, because
+      <code>NULL != NULL</code>. And the day is <strong>UTC</strong> via <code>timestamptz</code>, so
+      one nightly ritual cannot land on two different days depending on which region’s machine
+      called it.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="reveal">Recipes are data, not code</h2>
+    <p class="reveal">The gem ships <strong>no recipe content</strong> — not one checklist item, only
+      the mechanism and an empty fallback. Your procedures are rows: seeded once, then
+      operator-owned. Reseeding never overwrites an edit.</p>
+    <p class="reveal">Fixing a ritual is a <strong>write, not a deploy</strong> — and a fresh install
+      can ship with working procedures instead of an empty text box.</p>
+    <pre class="reveal"><code><span class="c"># A run is bound to the canon it opened against.</span>
+<span class="c"># Edit a recipe mid-run and the in-flight run still ticks its own</span>
+<span class="c"># steps — and refuses steps that did not exist when it started.</span>
+<span class="k">Jazari</span>.open_run(target: target, actor_ref: <span class="s">"agent:nightly"</span>)
+<span class="k">Jazari</span>.attach_evidence(run: run, expected_revision: run.lock_version,
+                       item_id: <span class="s">"counts"</span>, kind: <span class="s">"count"</span>, value: <span class="s">"4211 rows"</span>)
+<span class="k">Jazari</span>.last_run(target: target).outcome  <span class="c">#=> "completed"</span></code></pre>
+  </section>
+
+  <section id="why">
+    <h2 class="reveal">Why “Jazari”</h2>
+    <p class="reveal">Ismail <strong>al-Jazari</strong> (1136–1206) was an engineer at the Artuqid
+      court in Diyarbakır. He built programmable automata — a hand-washing machine that offered you
+      a towel, a clock driven by a water wheel, pumps with the earliest known crankshafts.</p>
+    <p class="reveal"><strong>That is not why the gem carries his name.</strong></p>
+    <div class="note reveal">
+      <p>He also wrote <em>The Book of Knowledge of Ingenious Mechanical Devices</em>, finished the
+      year he died: fifty machines, each with numbered construction steps and drawings detailed
+      enough that a stranger who had never met him could rebuild the device. He wrote down the
+      <strong>procedure</strong>, not just the result — including, in his own words, the steps he
+      had gotten wrong first.</p>
+    </div>
+    <p class="reveal">Eight hundred years later, people have built working machines from those pages.</p>
+    <p class="reveal">That is the whole idea here. A procedure is not lore in someone’s head or prose
+      in a document nobody opens. It is a written, versioned, checkable artefact that somebody else
+      can execute — and prove they executed.</p>
+    <p class="reveal muted"><code>runbook</code> was already taken on RubyGems, by the execution
+      framework below. Fittingly.</p>
+  </section>
+
+  <section>
+    <h2 class="reveal">What this is not</h2>
+    <p class="reveal">Not an execution framework. Jazari holds the <em>state</em> of a procedure —
+      the canon, the overrides, the runs, the evidence. It does not SSH anywhere or run your
+      commands.</p>
+    <p class="reveal">For the execution half, see
+      <a href="https://github.com/braintree/runbook">braintree/runbook</a>: a Ruby DSL for running
+      operational procedures, with resumable state and a dry-run mode. It has no data model; Jazari
+      has no executor. They compose.</p>
+  </section>
+
+  <section>
+    <h2 class="reveal">Install</h2>
+    <pre class="reveal"><code>gem <span class="s">"jazari"</span>
+
+bin/rails generate jazari:install
+bin/rails db:migrate</code></pre>
+    <p class="reveal muted">One migration, copied deliberately. Jazari never auto-appends migrations
+      to your schema. PostgreSQL required — <code>jsonb</code>, <code>timestamptz</code>, four CHECK
+      constraints, and a partial unique index.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/nauman/jazari">Read the README</a>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>MIT licensed. Built by <a href="https://nauman.one">nauman.one</a>.</p>
+</footer>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll('.kin').forEach(function(h){
+    var words = h.textContent.trim().split(' ');
+    h.textContent = '';
+    words.forEach(function(w,i){
+      var s = document.createElement('span');
+      s.textContent = w + ' ';
+      s.style.animationDelay = (i*90)+'ms';
+      h.appendChild(s);
+    });
+  });
+
+  if ('IntersectionObserver' in window && !reduce){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, {threshold:.12});
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+  }
+
+  var layers = [].slice.call(document.querySelectorAll('#stack .layer'));
+  var timer;
+  function play(){
+    clearInterval(timer);
+    var n = 0;
+    layers.forEach(function(l){ l.classList.remove('on'); });
+    timer = setInterval(function(){
+      if (layers[n]) layers[n].classList.add('on');
+      if (++n >= layers.length) clearInterval(timer);
+    }, 850);
+  }
+  document.getElementById('play').addEventListener('click', play);
+  if (reduce){ layers.forEach(function(l){ l.classList.add('on'); }); }
+  else if ('IntersectionObserver' in window){
+    var once = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ play(); once.disconnect(); } });
+    }, {threshold:.4});
+    once.observe(document.getElementById('stack'));
+  } else { layers.forEach(function(l){ l.classList.add('on'); }); }
+
+  document.getElementById('theme').addEventListener('click', function(){
+    var cur = document.documentElement.getAttribute('data-theme');
+    var next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+  });
+})();
+</script>
+</body>
+</html>

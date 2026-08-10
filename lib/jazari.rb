@@ -9,6 +9,7 @@ require "jazari/resolved_runbook"
 require "jazari/recipe_registry"
 require "jazari/runs"
 require "jazari/operations"
+require "jazari/mcp/handler"
 
 # Addressable operating procedures.
 #

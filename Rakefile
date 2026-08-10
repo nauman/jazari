@@ -27,6 +27,8 @@ TEST_ALLOWED = %w[
   Jazari DummySubject
   ActiveRecord Minitest
   Time Date Object ENV DB
+  ArgumentError StandardError RuntimeError NameError NoMethodError TypeError
+  String Symbol Integer Float Array Hash Struct Data Range Set
 ].freeze
 
 desc "Fail if the gem or its suite couples to anything outside its own namespace"
