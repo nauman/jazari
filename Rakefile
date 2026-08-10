@@ -78,4 +78,18 @@ task :boundary do
   puts "boundary: clean — the gem and its suite name nothing outside their own namespace"
 end
 
-task default: %i[boundary test]
+desc "Fail if a GitHub workflow file is not valid YAML"
+task :workflows do
+  require "yaml"
+  Dir[".github/workflows/*.yml"].each do |file|
+    YAML.load_file(file)
+    puts "workflow ok: #{file}"
+  rescue => error
+    abort "INVALID WORKFLOW #{file}: #{error.message}"
+  end
+end
+
+# `workflows` is in the gate because a broken workflow fails at 0s with no test
+# output — the local hook runs the suite, so it cannot catch a CI file that
+# never starts. Cheap check, whole class of failure.
+task default: %i[boundary workflows test]
