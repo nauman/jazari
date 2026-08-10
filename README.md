@@ -10,6 +10,14 @@ Requires Ruby 3.2+, Rails 7.1+, and PostgreSQL.
 
 ---
 
+## Guides
+
+The README is the pitch; the [guides](guide/) are the working documents —
+[concepts](guide/01-concepts.md) (start here: one word means something
+different than you expect), [adoption](guide/02-adoption.md),
+[anchors](guide/03-anchors.md), [runs and evidence](guide/04-runs.md),
+[MCP](guide/05-mcp.md), and [migrating an existing checklist](guide/06-migrating.md).
+
 ## The problem
 
 You have a procedure. Verify a backup by restoring it. Provision a server.

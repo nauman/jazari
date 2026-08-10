@@ -1,0 +1,112 @@
+# 01 · Concepts
+
+## The word that changed
+
+If you already have something called a "runbook", it almost certainly means
+*the whole thing* — a body of text plus a checklist, attached to a record.
+
+**In jazari, `runbook` means only one part of that:** a single subject's
+override of a shared procedure. The umbrella term is an **operating
+procedure**, and it has four layers.
+
+This is the single most common way to misread the API, so it is worth
+correcting before you write any code against it.
+
+## Four layers
+
+```
+RECIPE     the canon — how this ritual is done. Data, not code.
+  ↓        operator-editable at runtime, digest-versioned
+RUNBOOK    one subject's override — how THIS record differs
+  ↓        materialised on first edit; reading a default writes nothing
+QUEUE      a stable name for a ritual that outlives any record
+  ↓        read-only: a ritual has exactly one editable home
+RUN        one execution — who, when, which ticks, what evidence
+```
+
+Each answers a question the layer above it cannot.
+
+### Recipe — the canon
+
+How the ritual is done, as **data**. A row, not a constant: an operator edits it
+at runtime, and fixing a procedure is a write rather than a deploy.
+
+The gem ships **no recipe content at all** — not one checklist item. Yours are
+yours. That is also what lets a fresh install arrive with working procedures
+instead of an empty text box.
+
+Editing a recipe changes its digest, which invalidates outstanding revisions
+rather than letting them silently write onto changed ground.
+
+### Runbook — one subject's override
+
+Most subjects never need one. A runbook exists only when *this particular*
+record genuinely differs from the canon.
+
+It is materialised on the first edit. **Reading a default writes nothing** — no
+row, no anchor, no audit noise. That matters more than it sounds: it means you
+can resolve a procedure for ten thousand records without creating ten thousand
+rows.
+
+Reset destroys the override and reveals the *current* canon, so a later
+correction reaches every subject that never overrode it.
+
+### Queue — a name you can always call
+
+The layer most systems lack, and the reason agents improvise.
+
+Some procedures belong to no record. Verifying a backup is not one app's
+business. Triaging an alert is not a property of a server row. Provisioning
+happens before the machine exists.
+
+Attach-to-a-record has no answer, so those procedures end up in a session log, a
+learnings file, or an agent's private memory — findable only by someone who
+already knows where to look.
+
+A queue is a **stable name**:
+
+```ruby
+Jazari.resolve(target: Jazari::QueueTarget.new(
+  queue: "backup-verify", public_reference: { kind: "queue" },
+  recipe_id: "backup.verify.v1"
+))
+```
+
+The name is the contract. Whatever record carries that truth today can move
+without breaking the call.
+
+Queues are **read-only** — a ritual has exactly one editable home, its recipe.
+
+### Run — one execution
+
+Without this, a checklist is a mutable singleton: you `reset` it to run again,
+and in doing so destroy the only evidence it ever ran.
+
+A run carries its own ticks, its own actor, a start and an end, and somewhere to
+attach what you actually saw. The template stays clean; the history stops being
+destroyed by the act of starting over.
+
+A run also **snapshots its checklist when it opens**, so editing a recipe
+mid-run does not break runs in flight.
+
+## Three cross-cutting rules
+
+**Revision guards.** Every mutation carries the revision from the read before
+it. Mismatch raises `revision_conflict` instead of overwriting. This matters
+most when several automated writers share one procedure.
+
+**Idempotency belongs to the ritual, not the system.** Verifying a backup should
+happen once a day; triaging an incident may happen five times. Each recipe
+declares its own `run_policy`.
+
+**You authorize; jazari never sees an actor.** The domain accepts no raw IDs, no
+arbitrary records, and no actor. You authorize first, then hand it exactly one
+immutable target. Unknown, unauthorized, and deleted targets all collapse to the
+same `target_not_found`, so guessing cannot reveal what exists.
+
+## What it is not
+
+Not an execution framework. Jazari holds the *state* of a procedure. It does not
+SSH anywhere or run your commands. For the execution half see
+[braintree/runbook](https://github.com/braintree/runbook) — it has no data
+model, jazari has no executor, and they compose.
