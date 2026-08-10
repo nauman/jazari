@@ -10,6 +10,7 @@ require "jazari/recipe_registry"
 require "jazari/runs"
 require "jazari/operations"
 require "jazari/mcp/handler"
+require "jazari/railtie" if defined?(::Rails::Railtie)
 
 # Addressable operating procedures.
 #
