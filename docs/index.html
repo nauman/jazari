@@ -539,7 +539,9 @@ a.confirm?   <span class="o">#=&gt; true</span></pre></div>
   document.querySelectorAll('.kin').forEach(function(h){
     var w = h.textContent.trim().split(' '); h.textContent = '';
     w.forEach(function(x,i){ var s=document.createElement('span');
-      s.textContent = x+' '; s.style.animationDelay=(i*95)+'ms'; h.appendChild(s); });
+      // A trailing plain space inside an inline-block is collapsed away, so the
+      // words run together. A non-breaking space survives and still copies.
+      s.textContent = x + '\u00a0'; s.style.animationDelay=(i*95)+'ms'; h.appendChild(s); });
   });
 
   function countUp(el){
