@@ -426,3 +426,31 @@ class HostOwnedAnchorTest < Minitest::Test
     assert_equal 0, HostAnchor.count, "reset must leave no orphan, even for a host-owned anchor"
   end
 end
+
+class LazyTableNameTest < Minitest::Test
+  # Regression: table names were ASSIGNED at class-definition time, so the
+  # binding depended on load order. Under Zeitwerk a host's `configure` runs
+  # before these constants autoload, the assignment never happened, and the
+  # models silently kept the gem's defaults — so a host that had adopted
+  # existing tables queried tables that did not exist.
+  def test_configuring_after_the_models_are_loaded_still_rebinds
+    original = Jazari.config.table_names
+    assert Jazari::RecipeRecord.table_name, "models are already loaded here"
+
+    Jazari.configure { |c| c.table_names = { recipes: "late_bound_recipes" } }
+    assert_equal "late_bound_recipes", Jazari::RecipeRecord.table_name,
+      "a name set AFTER load must still take effect"
+  ensure
+    Jazari.configure { |c| c.table_names = original || {} }
+  end
+
+  def test_the_prefix_still_applies_to_unnamed_tables
+    original = Jazari.config.table_names
+    Jazari.configure { |c| c.table_prefix = "t_"; c.table_names = {} }
+    assert_equal "t_runs", Jazari::Run.table_name
+    assert_equal "t_anchors", Jazari::Anchor.table_name
+  ensure
+    Jazari.configure { |c| c.table_prefix = "jazari_"; c.table_names = original || {} }
+    assert_equal "jazari_runs", Jazari::Run.table_name
+  end
+end

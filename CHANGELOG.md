@@ -8,6 +8,17 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.2.1] - 2026-08-11
+
+### Fixed
+
+- **Table names are resolved lazily, not assigned at class-definition time.**
+  The binding previously depended on load order: under Zeitwerk a host's
+  `Jazari.configure` runs before the model constants autoload, so the
+  assignment never happened and the models silently kept the gem's default
+  names. A host that had adopted *existing* tables then queried tables that did
+  not exist. Found by a third host adoption.
+
 ## [0.2.0] - 2026-08-10
 
 ### Added

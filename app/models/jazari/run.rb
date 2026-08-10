@@ -8,7 +8,14 @@ module Jazari
   # that separation is the whole point: `reset` on a runbook must not be able to
   # destroy the record that the ritual ever ran.
   class Run < ApplicationRecord
-    self.table_name = "jazari_runs"
+    # Resolved on EVERY call, not assigned at class-definition time.
+    #
+    # Assigning it eagerly made the binding depend on load order: under Zeitwerk
+    # a host's `configure` runs before these constants autoload, so the
+    # assignment never happened and the model silently kept the gem's default
+    # name. A host adopting existing tables then queried tables that do not
+    # exist. Reading config here removes the ordering question entirely.
+    def self.table_name = Jazari.table_name_for(:runs)
 
     belongs_to :subject, polymorphic: true, optional: true
 

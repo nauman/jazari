@@ -70,25 +70,11 @@ module Jazari
     config.table_names[key]&.to_s || "#{config.table_prefix}#{TABLES.fetch(key)}"
   end
 
-  # A host may adopt these tables under existing names rather than renaming
-  # live tables in the same deploy as the cut-over.
-  #
-  # CONSTRAINT: ActiveRecord table names are process-global class state, so the
-  # prefix is a BOOT-TIME setting for the whole process. It is not per-request,
-  # per-thread, or per-tenant, and two hosts in one process cannot hold
-  # different prefixes. Call `configure` once, at boot, after the models are
-  # loaded; `models_loaded?` reports whether the binding actually took effect
-  # so a host can assert it instead of silently running on default names.
+  # Kept for hosts that call it explicitly; the models now resolve their own
+  # names on every call, so nothing depends on this having run.
   def self.models_loaded? = const_defined?(:RecipeRecord)
 
-  def self.apply_table_names!
-    return false unless models_loaded?
-
-    { RecipeRecord: :recipes, Runbook: :runbooks, Anchor: :anchors, Run: :runs }.each do |klass, key|
-      const_get(klass).table_name = table_name_for(key)
-    end
-    true
-  end
+  def self.apply_table_names! = models_loaded?
 
   def self.config = configuration || configure
 
