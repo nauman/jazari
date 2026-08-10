@@ -1,0 +1,19 @@
+{
+  "org": "jazari",
+  "folder": "guide",
+  "host": "https://kuickr.co",
+  "source": {
+    "repo_url": "https://github.com/nauman/jazari",
+    "branch": "main",
+    "source_path": "guide"
+  },
+  "files": {
+    "01-concepts.md": "c4193931803fbf08e1eff252d1d07a2aa7fc3c70baea32ff8a6003296ba908d0",
+    "02-adoption.md": "ba78c8f7d169eba050b51658a8b5e84dd8837f5abde33527bfa81f9ba5327569",
+    "03-anchors.md": "2ef10923f6d81fdd648316a7824a30302ad61e29125e458ed9cac86941dfc6fd",
+    "04-runs.md": "0baf64f24f709af26e25e436f06023d72e80a9742155ba416893a22054898b62",
+    "05-mcp.md": "b849a01cb74c78a102635b2fdc53650457d4b0e4613c378f258d0ee0353c2cae",
+    "06-migrating.md": "4d3495e8c8aa9ce9315ff85dbcdc8bf6548a7638d2987b4054c07cc71ed219d5",
+    "README.md": "436192af282d1f7c8cf620e896f5f6bf13f32d496dddb9b65023d990b9bb3412"
+  }
+}

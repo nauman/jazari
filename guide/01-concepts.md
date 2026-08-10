@@ -107,6 +107,13 @@ same `target_not_found`, so guessing cannot reveal what exists.
 ## What it is not
 
 Not an execution framework. Jazari holds the *state* of a procedure. It does not
-SSH anywhere or run your commands. For the execution half see
-[braintree/runbook](https://github.com/braintree/runbook) — it has no data
-model, jazari has no executor, and they compose.
+SSH anywhere, shell out, or run your commands.
+
+That boundary is deliberate rather than a gap. Execution is already served by
+whatever you have — CI, a rake task, a deploy tool — and it differs per shop.
+What none of those keep is a durable, addressable record of which procedure ran,
+who ran it, and what came back.
+
+The name `runbook` was taken on RubyGems by a DSL for *executing* procedures;
+that project last released in 2021 and last committed in 2022, so treat it as
+historical context for the naming rather than something to build on.

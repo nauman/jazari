@@ -279,19 +279,19 @@ footer{padding:36px 0 60px;border-top:1px solid var(--line);font-size:13px;color
     <p class="reveal">That is the whole idea here. A procedure is not lore in someone’s head or prose
       in a document nobody opens. It is a written, versioned, checkable artefact that somebody else
       can execute — and prove they executed.</p>
-    <p class="reveal muted"><code>runbook</code> was already taken on RubyGems, by the execution
-      framework below. Fittingly.</p>
+    <p class="reveal muted"><code>runbook</code> was already taken on RubyGems — by a DSL for
+      <em>executing</em> procedures, last released in 2021. The name is occupied; the project is not
+      one to build on.</p>
   </section>
 
   <section>
     <h2 class="reveal">What this is not</h2>
     <p class="reveal">Not an execution framework. Jazari holds the <em>state</em> of a procedure —
-      the canon, the overrides, the runs, the evidence. It does not SSH anywhere or run your
-      commands.</p>
-    <p class="reveal">For the execution half, see
-      <a href="https://github.com/braintree/runbook">braintree/runbook</a>: a Ruby DSL for running
-      operational procedures, with resumable state and a dry-run mode. It has no data model; Jazari
-      has no executor. They compose.</p>
+      the canon, the overrides, the runs, the evidence. It does not SSH anywhere, shell out, or run
+      your commands.</p>
+    <p class="reveal">That boundary is deliberate. Execution is already served by whatever you
+      have — CI, a rake task, a deploy tool — and it differs per shop. What none of them keep is a
+      durable, addressable record of <em>which procedure</em> ran, by whom, and what came back.</p>
   </section>
 
   <section>

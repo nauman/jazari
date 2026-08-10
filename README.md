@@ -229,34 +229,19 @@ out of coverage.
 ## What this is not
 
 Not an execution framework. Jazari holds the *state* of a procedure — the canon,
-the overrides, the runs, the evidence. It does not SSH anywhere or run your
-commands.
+the overrides, the runs, the evidence. It does not SSH anywhere, shell out, or
+run your commands.
 
-For the execution half, see [braintree/runbook](https://github.com/braintree/runbook):
-a Ruby DSL for running operational procedures, with resumable state and a dry-run
-mode. It has no data model; Jazari has no executor. They compose.
+That boundary is deliberate. Execution is already well served by whatever you
+have — CI, a rake task, Ansible, a deploy tool — and those differ per shop.
+What none of them keep is a durable, checkable, addressable record of *which
+procedure* was run, by whom, and what came back. Jazari keeps that, and stays
+out of the way of however you actually run things.
 
-## Why "Jazari"
-
-Ismail **al-Jazari** (1136–1206), engineer at the Artuqid court in Diyarbakır,
-built programmable automata — a hand-washing machine that offered you a towel,
-a clock driven by a water wheel, pumps with the earliest known crankshafts.
-
-That is not why the gem carries his name.
-
-He also wrote *The Book of Knowledge of Ingenious Mechanical Devices*, finished
-the year he died: fifty machines, each with numbered construction steps and
-drawings detailed enough that a stranger who had never met him could rebuild the
-device. He wrote down the *procedure*, not just the result — including, in his
-own words, the steps he had gotten wrong first.
-
-Eight hundred years later people have built working machines from those pages.
-
-That is the whole idea here. A procedure is not lore in someone's head or prose
-in a document nobody opens. It is a written, versioned, checkable artefact that
-somebody else can execute and prove they executed.
-
-`runbook` was taken on RubyGems — by the execution framework above, fittingly.
+(The name `runbook` was already taken on RubyGems, by a DSL for executing
+operational procedures. That gem's last release was 2021 and its last commit
+2022, so it is not a dependency worth taking — but the name is still occupied,
+which is one reason this gem is called jazari.)
 
 ## License
 
