@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# The handler dispatches against Mcp::Actions, so it must require it: a host may
+# `require "jazari/mcp/handler"` on its own now that this layer is opt-in.
+require "jazari/mcp/actions"
+
 module Jazari
   module Mcp
     # Transport-neutral adapter between an MCP action name and the domain.
@@ -13,23 +17,15 @@ module Jazari
     # That split is deliberate: two products sharing this handler still present
     # their own tool, their own subject vocabulary, and their own permissions.
     class Handler
-      READ_ACTIONS = %w[get last_run].freeze
-      WRITE_ACTIONS = %w[set add_item remove_item check_item reset start tick evidence finish].freeze
-      ACTIONS = (READ_ACTIONS + WRITE_ACTIONS).freeze
-
-      # Advertise only what the granted scope may call. A read-scoped connection
-      # should not see mutations in its tool list at all — hiding them is not
-      # security, but offering them and refusing is a worse experience.
-      def self.actions_for(scope)
-        scope.to_s == "read" ? READ_ACTIONS : ACTIONS
-      end
+      # Actions are declared once, in Mcp::Actions, so the schema a host
+      # publishes and the behaviour implemented here cannot drift apart.
+      def self.actions_for(scope) = Actions.names(scope: scope)
 
       def call(action:, target:, arguments: {})
         args = symbolize(arguments)
-        name = action.to_s
-        raise ArgumentError, "unknown runbook action #{action.inspect}" unless ACTIONS.include?(name)
+        descriptor = Actions.fetch(action)   # raises on an unknown action
 
-        reply(public_send(:"handle_#{name}", target, args))
+        reply(public_send(:"handle_#{descriptor.name}", target, args))
       rescue Jazari::Error => error
         # The closed taxonomy crosses the wire as a code, never as a message
         # that could disclose a record, a query, or whether a target exists.

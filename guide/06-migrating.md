@@ -33,10 +33,20 @@ no trace and no complaint.
 
 Carry `done` through. If you cannot, stop and say so before running it.
 
-## Item ids are load-bearing
+## Item ids — measure before you build a map
 
-Integer primary keys leak further than you expect. Inventory every caller — not
-just the obvious one:
+**Check whether your ids need translating at all before designing anything.**
+Jazari item ids match `[A-Za-z0-9_-]{1,64}`, and the string form of an integer
+satisfies that. In one real migration every id carried across verbatim, so the
+ids quoted in deploy documentation kept resolving and no map was needed.
+
+Do not reason from "the ids interleave across subjects, so no offset scheme
+works" to "therefore build a per-row map." Interleaving rules out offsets; it
+says nothing about whether translation is required. Count first.
+
+If your ids genuinely are not valid tokens, then you need a map — and it must be
+a **table, not a migration-time printout**, because a caller may arrive with a
+stale id days later. Inventory every caller before deciding:
 
 - the MCP tool's **input schema** (`type: "integer"` will reject opaque ids)
 - the tool implementation's lookup
@@ -59,10 +69,25 @@ end
 Accept both id types for one release (`["integer", "string"]`), resolve integers
 through the map, then narrow.
 
-**Do not derive the opaque id from the integer.** Ids interleave across subjects
-far more than you would guess — in one census six subjects' ranges overlapped
-(24–55 against 41–56), so no per-subject offset scheme can work. Generate fresh
-ids and map per row.
+If you do need generated ids, do not derive them from the integers by any
+per-subject offset — ids interleave more than you would guess (in one census six
+subjects' ranges overlapped, 24–55 against 41–56). Generate fresh ids and map
+per row.
+
+## Timestamps belong to runs, not items
+
+If your existing items carry a `done_at`, resist adding a timestamp field to the
+checklist item. `done` is *current state*; timestamped completion is *history*,
+and putting the same fact in both layers lets them disagree.
+
+Backfill a **closed run** per subject instead: `ticks` carrying each item's
+original `done_at` as `at`, `started_at`/`finished_at` from the earliest and
+latest, and an honest `actor_ref` like `"migration"` — do not invent a user. The
+current `done` flags carry across unchanged, so nobody's in-flight work moves,
+and `last_run` starts answering immediately.
+
+Losing those timestamps is also a defensible choice — just make it explicitly,
+rather than letting them disappear quietly.
 
 ## Backfill on the right condition
 
