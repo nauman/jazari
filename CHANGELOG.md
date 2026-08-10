@@ -8,6 +8,30 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.2.0] - 2026-08-10
+
+### Added
+
+- **`Jazari::Mcp::Actions`** — every action declared as data (`scope`, `effect`,
+  `confirm`, parameter schemas, summary), with `schema_fragment` for merging into
+  a host's own MCP tool. A host with an existing MCP surface keeps its tool name,
+  envelope, dispatch, and permissions, and calls `Jazari.*` directly — no
+  coupling to this gem's handler or reply shape.
+- `Jazari::Mcp::Actions.summaries` for a tool description or paired skill.
+
+### Changed
+
+- **The MCP layer is now genuinely optional.** Descriptors load with the gem;
+  the dispatcher does not. `require "jazari/mcp/handler"` to opt in.
+- `Mcp::Handler` validates and scopes against the same declarations, so a
+  published schema and the implemented behaviour cannot drift. A test asserts the
+  handler dispatches every declared action.
+
+### Fixed
+
+- `mcp/handler.rb` now requires `mcp/actions`. With the layer opt-in, a host
+  requiring the handler alone would have raised `NameError`.
+
 ## [0.1.0] - 2026-08-10
 
 First release. Proven against one host adoption.
