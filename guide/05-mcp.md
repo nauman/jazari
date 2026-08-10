@@ -8,6 +8,54 @@ Jazari::Mcp::Handler.new.call(action: "get", target: target)
 # => { ok: true, state: "default", topic: "...", progress: {...}, last_run: {...} }
 ```
 
+## The MCP layer is optional
+
+Nothing requires you to use it. The gem has no MCP dependency, and the
+dispatcher is not even loaded by default:
+
+```ruby
+require "jazari/mcp/handler"   # only if you want the ready-made dispatcher
+```
+
+If you already have an MCP surface with its own envelope, naming, and
+permissions, **absorb the actions into your own tool** instead — see below.
+
+## Absorbing jazari into your own tool
+
+`Jazari::Mcp::Actions` declares every action as data, so you can build your own
+schema and keep your own dispatch:
+
+```ruby
+frag = Jazari::Mcp::Actions.schema_fragment          # or scope: :read
+
+MY_TOOL[:input_schema][:properties][:action][:enum] += frag[:enum]
+MY_TOOL[:input_schema][:properties].merge!(frag[:properties])
+```
+
+Then dispatch to `Jazari.*` yourself. No handler, no coupling to this gem's
+reply shape.
+
+Each descriptor carries what a host needs to annotate correctly:
+
+```ruby
+a = Jazari::Mcp::Actions.fetch("reset")
+a.effect     # => :destructive
+a.confirm?   # => true
+a.summary    # => "Discard this subject's override and reveal the current canon."
+```
+
+`effect` is one of `:read`, `:additive`, `:overwrite`, `:destructive` — enough
+to decide how cautiously your clients should treat each action without reading
+this gem's source.
+
+`Jazari::Mcp::Actions.summaries` gives a ready line-per-action list for a tool
+description or a paired skill.
+
+**These descriptors are the single source of truth.** The shipped handler
+validates and scopes against the same list, and a test asserts it can dispatch
+every declared action — so the schema you publish and the behaviour the gem
+implements cannot drift apart.
+
 ## Why the gem does not ship a tool
 
 Tool identity is product identity. Your tool has your name, your subject

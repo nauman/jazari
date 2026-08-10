@@ -10,7 +10,11 @@ require "jazari/resolved_runbook"
 require "jazari/recipe_registry"
 require "jazari/runs"
 require "jazari/operations"
-require "jazari/mcp/handler"
+# The MCP layer is OPTIONAL. Descriptors are cheap and a host may want them to
+# build its own tool, so they load; the handler does not, because a host with
+# its own MCP surface never calls it.
+#   require "jazari/mcp/handler"   # only if you want the ready-made dispatcher
+require "jazari/mcp/actions"
 require "jazari/railtie" if defined?(::Rails::Railtie)
 
 # Addressable operating procedures.

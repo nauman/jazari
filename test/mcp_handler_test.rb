@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
+require "jazari/mcp/handler"   # optional layer — hosts opt in
 
 # The handler is what every host's tool calls. These prove the wire shape a
 # host can rely on, and that domain errors cross it as codes rather than
