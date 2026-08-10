@@ -77,7 +77,7 @@ module Jazari
       if record
         record.with_lock do
           verify_custom_revision!(record, expected_revision)
-          destroy_with_anchor(record)
+          destroy_with_anchor(record, target)
         end
       else
         verify_default_revision!(target, expected_revision)
@@ -159,9 +159,17 @@ module Jazari
     end
     private_class_method :runbookable_for
 
-    def destroy_with_anchor(record)
+    # Whether the anchor goes with the runbook is decided by the TARGET, not by
+    # the anchor's class.
+    #
+    # The first version asked `anchor.is_a?(Jazari::Anchor)`, which quietly
+    # assumed the gem owns the anchor model. A host that adopted jazari onto its
+    # own anchor table returns its own class, the check failed, and reset left an
+    # orphan anchor behind. The target always knows the truth.
+    def destroy_with_anchor(record, target)
       anchor = record.runbookable
-      anchor.is_a?(Anchor) ? anchor.destroy! : record.destroy!
+      record.destroy!
+      anchor.destroy! if target.is_a?(AnchorTarget) && anchor.respond_to?(:destroy!)
     end
     private_class_method :destroy_with_anchor
 

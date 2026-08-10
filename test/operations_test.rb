@@ -379,3 +379,50 @@ class AnchorResolverContractTest < Minitest::Test
     assert_equal 1, Jazari::Anchor.count
   end
 end
+
+class HostOwnedAnchorTest < Minitest::Test
+  # A host may adopt jazari onto an anchor table it already owns, so the anchor
+  # it returns is NOT a Jazari::Anchor. Nothing may depend on that class.
+  class HostAnchor < ActiveRecord::Base
+    self.table_name = "host_anchors"
+    has_one :runbook, class_name: "Jazari::Runbook", as: :runbookable, dependent: :destroy
+  end
+
+  def setup
+    ActiveRecord::Migration.suppress_messages do
+      ActiveRecord::Schema.define do
+        create_table :host_anchors, force: true do |t|
+          t.string :key, null: false
+          t.timestamps
+        end
+      end
+    end
+    Jazari::Runbook.delete_all
+    Jazari::RecipeRecord.delete_all
+    HostAnchor.delete_all
+    Jazari::RecipeRegistry.seed!([ { id: "canon.v1", topic: "T",
+      checklist: [ { id: "a", text: "A", done: false } ] } ])
+    Jazari.configure do |c|
+      c.anchor_scopes = { "HostTree" => lambda do |target, create|
+        create ? HostAnchor.create_or_find_by!(key: target.key) : HostAnchor.find_by(key: target.key)
+      end }
+    end
+  end
+
+  def target
+    Jazari::AnchorTarget.new(scope_type: "HostTree", scope_id: 1, key: "n1",
+                             public_reference: {}, recipe_id: "canon.v1")
+  end
+
+  def test_reset_destroys_a_host_owned_anchor_leaving_no_orphan
+    r = Jazari::Operations.resolve(target: target)
+    custom = Jazari::Operations.customize(target: target, expected_revision: r.revision,
+                                          topic: "Ours", description: "", checklist: [])
+    assert_equal 1, HostAnchor.count
+    assert_equal 1, Jazari::Runbook.count
+
+    Jazari::Operations.reset(target: target, expected_revision: custom.revision)
+    assert_equal 0, Jazari::Runbook.count
+    assert_equal 0, HostAnchor.count, "reset must leave no orphan, even for a host-owned anchor"
+  end
+end

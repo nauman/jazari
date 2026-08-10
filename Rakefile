@@ -23,8 +23,12 @@ end
 # would have to enumerate the private systems it protects — publishing, in a
 # public repo, exactly what it exists to conceal — and would only ever catch
 # names someone remembered to add.
+# DummySubject and HostAnchor are the suite's ONLY stand-ins for a host: one
+# for an ordinary subject, one for a host-owned anchor class. Adding a third
+# should require a reason — each is a place a real application model could
+# creep in.
 TEST_ALLOWED = %w[
-  Jazari DummySubject
+  Jazari DummySubject HostAnchor
   ActiveRecord Minitest
   Time Date Object ENV DB
   ArgumentError StandardError RuntimeError NameError NoMethodError TypeError KeyError
