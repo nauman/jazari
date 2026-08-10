@@ -40,7 +40,19 @@ so a green run means the schema is real, not approximated.
 **Read the boundary output.** It is the check that stops a host product name
 leaving in a published package, and release is the one irreversible moment.
 
-## 3. Commit, tag, push
+## 3. Commit, tag, push — straight to main
+
+> **No pull request for a release.** Not for the version bump, not for the
+> changelog. A release is mechanical: the version, the changelog, the tag. There
+> is no design to review, and routing it through a PR adds a round trip to the
+> one task whose whole value is being fast and boring.
+>
+> The same applies to **landing-page edits** and **documentation**. Those are
+> published surfaces you can see and correct in seconds; a review gate on them
+> buys nothing and slows the loop.
+>
+> PRs are for **code and contracts** — anything that changes behaviour, an API,
+> a schema, or a guarantee. That is where a second reader earns their keep.
 
 ```bash
 git add -A
