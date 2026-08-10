@@ -5,6 +5,19 @@ require_relative "lib/jazari/version"
 Gem::Specification.new do |spec|
   spec.name        = "jazari"
   spec.version     = Jazari::VERSION
+  # Required by RubyGems — a gemspec without authors will not even install from
+  # git. The noreply address keeps a real inbox out of a public package while
+  # still attributing the work.
+  spec.authors     = [ "Nauman Tariq" ]
+  spec.email       = [ "90499+nauman@users.noreply.github.com" ]
+  spec.homepage    = "https://github.com/nauman/jazari"
+  spec.metadata    = {
+    "homepage_uri"    => "https://github.com/nauman/jazari",
+    "source_code_uri" => "https://github.com/nauman/jazari",
+    "changelog_uri"   => "https://github.com/nauman/jazari/blob/main/CHANGELOG.md",
+    "rubygems_mfa_required" => "true"
+  }
+
   spec.summary     = "Addressable operating procedures: recipes, runbooks, queues, and per-run evidence."
   spec.description = "A procedure you can call instead of a document you hope someone reads. " \
                      "Recipes as data, per-subject overrides, stable queue names for rituals that " \
