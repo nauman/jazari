@@ -8,9 +8,9 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
-## [Unreleased]
+## [0.1.0] - 2026-08-10
 
-Initial implementation. Not yet released to RubyGems.
+First release. Proven against one host adoption.
 
 - Four layers: recipe (the canon), runbook (per-subject override), queue
   (a stable name for a ritual), run (one execution with evidence).

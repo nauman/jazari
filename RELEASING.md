@@ -77,13 +77,12 @@ page rather than the repo.
 ## Pre-1.0
 
 Until `1.0.0`, minor versions may break. Say so plainly in the changelog rather
-than pretending otherwise; the hosts adopting this gem are all in one fleet and
-can be migrated deliberately.
+than pretending otherwise.
 
-The move to `1.0.0` should wait until at least two hosts have run the Run layer
-against real traffic. Idempotency, evidence, and the revision guard are the
-claims most likely to be wrong in a way only production reveals — the first
-adoption already found five bugs that no amount of unit testing had surfaced.
+Release early and often. Publishing is what lets hosts depend on a version
+instead of pinning a git SHA and re-pinning it after every fix — which is
+friction paid on every change, by every host. A version on RubyGems costs
+nothing to add; an unreleased gem costs something every day.
 
 ## This ritual is itself a candidate recipe
 
