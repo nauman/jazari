@@ -8,7 +8,7 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
-## [0.2.1] - 2026-08-11
+## [0.2.1] - 2026-08-10
 
 ### Fixed
 
