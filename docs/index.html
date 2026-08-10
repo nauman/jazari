@@ -9,539 +9,596 @@
 <meta property="og:description" content="Operating procedures you can call, instead of documents you hope someone reads.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
 <style>
-/* ── palette ─────────────────────────────────────────────────────────────
-   Ink on paper, after the illustrated plates of the Kitab al-Hiyal: a warm
-   ground, dark ink, and one madder-red reserved for the part being pointed
-   at — the way a manuscript marks the piece under discussion.               */
 :root{
-  --paper:#f4efe4; --plate:#fbf8f1; --raise:#fffdf8;
+  --bg:#f4efe4; --bg-2:#ebe4d5; --card:#fffdf8; --deep:#241f18;
   --ink:#241f18; --ink-2:#4a4136; --ink-3:#7d7261;
-  --rule:#d9cfbb; --rule-2:#c6b9a0;
-  --madder:#a8452c; --madder-soft:#f2e2db;
-  --indigo:#2c4a6e; --verd:#436b4d; --gold:#8a6716;
+  --rule:#ddd3bf; --rule-2:#c6b9a0;
+  --mad:#a8452c; --mad-soft:#f2e2db;
+  --ind:#2c4a6e; --verd:#436b4d; --gold:#8a6716;
   --disp:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
   --ui:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --ease:cubic-bezier(.2,.7,.2,1);
+  --e:cubic-bezier(.2,.7,.2,1);
 }
 :root[data-theme="dark"]{
-  --paper:#15120e; --plate:#1c1813; --raise:#231e18;
+  --bg:#15120e; --bg-2:#100e0b; --card:#1f1a15; --deep:#0b0908;
   --ink:#f0e9dc; --ink-2:#cdc2ae; --ink-3:#968973;
   --rule:#3a322a; --rule-2:#4b4136;
-  --madder:#e08a70; --madder-soft:#3a231c;
-  --indigo:#8fb0d6; --verd:#8fbf9a; --gold:#d4a943;
+  --mad:#e08a70; --mad-soft:#3a231c;
+  --ind:#8fb0d6; --verd:#8fbf9a; --gold:#d4a943;
 }
-@media(prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --paper:#15120e; --plate:#1c1813; --raise:#231e18;
-    --ink:#f0e9dc; --ink-2:#cdc2ae; --ink-3:#968973;
-    --rule:#3a322a; --rule-2:#4b4136;
-    --madder:#e08a70; --madder-soft:#3a231c;
-    --indigo:#8fb0d6; --verd:#8fbf9a; --gold:#d4a943;
-  }
-}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15120e; --bg-2:#100e0b; --card:#1f1a15; --deep:#0b0908;
+  --ink:#f0e9dc; --ink-2:#cdc2ae; --ink-3:#968973;
+  --rule:#3a322a; --rule-2:#4b4136;
+  --mad:#e08a70; --mad-soft:#3a231c;
+  --ind:#8fb0d6; --verd:#8fbf9a; --gold:#d4a943;
+}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--ui);
-  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-.wrap{max-width:940px;margin:0 auto;padding:0 22px}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--ui);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.narrow{max-width:760px}
 h1,h2,h3{margin:0;font-weight:400}
-h1{font-family:var(--disp);font-size:clamp(34px,6.6vw,62px);line-height:1.05;letter-spacing:-.015em}
-h2{font-family:var(--disp);font-size:clamp(23px,3.6vw,32px);margin:0 0 6px}
-h3{font:600 15px/1.35 var(--ui)}
-p{margin:0 0 15px;max-width:66ch}
-a{color:var(--madder)}
+h1{font-family:var(--disp);font-size:clamp(40px,8vw,86px);line-height:.98;letter-spacing:-.02em}
+h2{font-family:var(--disp);font-size:clamp(28px,4.6vw,44px);line-height:1.08;letter-spacing:-.015em}
+h3{font:600 16px/1.35 var(--ui)}
+p{margin:0 0 16px}
+a{color:var(--mad)}
 .mono{font-family:var(--mono)}
-.eyebrow{font:600 11px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
-.lede{font-size:clamp(17px,2.1vw,20px);color:var(--ink-2);max-width:60ch}
+.eyebrow{font:600 11px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mad)}
+.lede{font-size:clamp(17px,2.2vw,21px);color:var(--ink-2);max-width:58ch}
 .muted{color:var(--ink-3)}
 
-/* ── the plate: a framed figure, after the manuscript ──────────────────── */
-.plate{position:relative;background:var(--plate);border:1px solid var(--rule-2);
-  padding:26px 24px 20px;margin:26px 0;
-  box-shadow:0 1px 0 var(--rule) inset, 0 14px 34px rgba(36,31,24,.05)}
-.plate::before{content:"";position:absolute;inset:6px;border:1px solid var(--rule);
-  pointer-events:none;opacity:.8}
-.plate > *{position:relative}
-.plate-no{position:absolute;top:-11px;left:20px;background:var(--paper);
-  padding:0 9px;font:600 10.5px var(--mono);letter-spacing:.16em;
-  text-transform:uppercase;color:var(--madder);z-index:2}
-.plate-cap{margin:16px 0 0;font:12.5px/1.5 var(--mono);color:var(--ink-3);
-  border-top:1px solid var(--rule);padding-top:12px;max-width:none}
+/* nav */
+nav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
+nav .wrap{display:flex;align-items:center;gap:22px;height:58px}
+.brand{font:600 15px var(--ui);letter-spacing:-.01em;text-decoration:none;color:var(--ink);
+  display:flex;align-items:center;gap:9px}
+.brand i{width:9px;height:9px;background:var(--mad);border-radius:50%;display:block}
+nav a.l{font:500 13.5px var(--ui);color:var(--ink-3);text-decoration:none}
+nav a.l:hover{color:var(--mad)}
+.spacer{flex:1}
+.navcta{font:600 13px var(--ui);text-decoration:none;color:var(--bg);background:var(--ink);
+  padding:9px 15px;border-radius:2px}
+@media(max-width:760px){nav a.l{display:none}}
 
-/* ── hero ──────────────────────────────────────────────────────────────── */
-.hero{position:relative;padding:60px 0 30px;overflow:hidden}
-.tess{position:absolute;inset:0;z-index:0;opacity:.55;pointer-events:none;
-  background-image:
-    repeating-linear-gradient(45deg, transparent 0 26px, color-mix(in srgb,var(--rule) 60%,transparent) 26px 27px),
-    repeating-linear-gradient(-45deg, transparent 0 26px, color-mix(in srgb,var(--rule) 60%,transparent) 26px 27px);
-  -webkit-mask-image:radial-gradient(120% 78% at 80% 6%, #000 0%, transparent 66%);
-  mask-image:radial-gradient(120% 78% at 80% 6%, #000 0%, transparent 66%)}
-.hero > .wrap{position:relative;z-index:1}
-.kin span{display:inline-block;opacity:0;transform:translateY(.42em);
-  animation:rise .75s var(--ease) forwards}
+/* bands */
+.band{padding:clamp(64px,9vw,110px) 0}
+.band.alt{background:var(--bg-2)}
+.band.dark{background:var(--deep);color:#f0e9dc}
+.band.dark h2,.band.dark h3{color:#f7f2e8}
+.band.dark .muted{color:#9c9080}
+.band.dark .eyebrow{color:var(--gold)}
+
+/* hero */
+.hero{position:relative;padding:clamp(56px,8vw,96px) 0 clamp(50px,7vw,88px);overflow:hidden}
+.mesh{position:absolute;inset:-30% -10%;z-index:0;pointer-events:none;opacity:.45;
+  background:
+    radial-gradient(36vw 36vw at 78% 16%, color-mix(in srgb,var(--mad) 26%,transparent), transparent 62%),
+    radial-gradient(40vw 40vw at 18% 4%, color-mix(in srgb,var(--ind) 22%,transparent), transparent 64%);
+  animation:drift 26s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(0,-4%,0) scale(1.12)}}
+.hero .wrap{position:relative;z-index:1}
+.kin span{display:inline-block;opacity:0;transform:translateY(.44em);animation:rise .8s var(--e) forwards}
 @keyframes rise{to{opacity:1;transform:none}}
-.cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
-.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;
-  border:1px solid var(--rule-2);background:var(--raise);color:var(--ink);
-  font:600 14px var(--ui);text-decoration:none}
-.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.btn:hover{border-color:var(--madder);color:var(--madder)}
-.btn.primary:hover{color:var(--paper);opacity:.88}
+.cta{display:flex;gap:11px;flex-wrap:wrap;margin-top:30px}
+.btn{display:inline-flex;align-items:center;min-height:46px;padding:0 22px;
+  border:1px solid var(--rule-2);background:var(--card);color:var(--ink);
+  font:600 14px var(--ui);text-decoration:none;border-radius:2px;transition:.16s}
+.btn.p{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn:hover{transform:translateY(-1px);border-color:var(--mad);color:var(--mad)}
+.btn.p:hover{color:var(--bg);opacity:.9}
 
-section{padding:46px 0;border-top:1px solid var(--rule)}
-.reveal{opacity:0;transform:translateY(16px);transition:opacity .65s ease,transform .65s var(--ease)}
-.reveal.in{opacity:1;transform:none}
+/* stat band */
+.stats{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
+  grid-template-columns:repeat(2,1fr);margin-top:52px}
+@media(min-width:720px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--bg);padding:22px 20px}
+.stat b{display:block;font-family:var(--disp);font-size:clamp(30px,4vw,44px);line-height:1;
+  color:var(--ink);font-weight:400}
+.stat span{display:block;margin-top:8px;font:500 12.5px var(--mono);color:var(--ink-3)}
 
-/* ── code, hand-highlighted: no CDN, no build step ─────────────────────── */
-pre{margin:0;background:var(--raise);border:1px solid var(--rule);
-  padding:16px 18px;overflow-x:auto;font:500 13px/1.75 var(--mono);color:var(--ink-2)}
-pre b{font-weight:600;color:var(--ink)}
-.c-key{color:var(--indigo);font-weight:600}
-.c-str{color:var(--verd)}
-.c-com{color:var(--ink-3);font-style:italic}
-.c-out{color:var(--madder)}
-.code-label{font:600 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;
-  color:var(--ink-3);margin:0 0 8px;max-width:none}
+/* cards */
+.cards{display:grid;gap:18px;margin-top:38px}
+@media(min-width:760px){.cards.c2{grid-template-columns:1fr 1fr}.cards.c4{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--card);border:1px solid var(--rule);padding:24px;border-radius:2px;
+  transition:.2s var(--e)}
+.card:hover{transform:translateY(-3px);border-color:var(--rule-2);
+  box-shadow:0 14px 34px rgba(36,31,24,.07)}
+.card .n{font:600 11px var(--mono);letter-spacing:.16em;color:var(--mad);display:block;margin-bottom:12px}
+.card p{font-size:14.5px;color:var(--ink-3);margin:0}
+.card .q{display:block;margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);
+  font:12.5px var(--mono);color:var(--mad)}
 
-/* ── four layers, staged (.anim contract: JS toggles state, CSS reveals) ─ */
-.anim-stage{display:grid;gap:0;margin:6px 0 0}
-.layer{display:grid;grid-template-columns:44px 1fr;gap:18px;align-items:start;
-  padding:16px 0;border-bottom:1px dashed var(--rule);
-  opacity:.22;transition:opacity .55s var(--ease)}
-.layer:last-child{border-bottom:0}
-.layer .fig{width:44px;height:44px;border:1px solid var(--rule-2);border-radius:50%;
-  display:grid;place-items:center;font:600 13px var(--mono);color:var(--ink-3);
-  background:var(--plate);transition:all .55s var(--ease)}
-[data-anim-step="1"] .step-1,
-[data-anim-step="2"] .step-1,[data-anim-step="2"] .step-2,
-[data-anim-step="3"] .step-1,[data-anim-step="3"] .step-2,[data-anim-step="3"] .step-3,
-[data-anim-step="4"] .step-1,[data-anim-step="4"] .step-2,[data-anim-step="4"] .step-3,[data-anim-step="4"] .step-4{opacity:1}
-[data-anim-step="1"] .step-1 .fig,
-[data-anim-step="2"] .step-2 .fig,
-[data-anim-step="3"] .step-3 .fig,
-[data-anim-step="4"] .step-4 .fig{border-color:var(--madder);color:var(--madder);background:var(--madder-soft)}
-.layer h3{margin:0 0 3px}
-.layer p{margin:0;font-size:14px;color:var(--ink-3);max-width:58ch}
-.layer .q{display:block;margin-top:6px;font:12.5px var(--mono);color:var(--madder)}
-.anim-replay{margin-top:18px;min-height:44px;padding:0 18px;border:1px solid var(--rule-2);
-  background:var(--raise);color:var(--ink);font:600 13px var(--ui);cursor:pointer}
-.anim-replay:hover{border-color:var(--madder);color:var(--madder)}
+/* code */
+pre{margin:0;background:var(--deep);border:1px solid var(--rule-2);color:#d9d0be;
+  padding:20px 22px;overflow-x:auto;font:500 13px/1.8 var(--mono);border-radius:2px}
+:root[data-theme="dark"] pre{background:#0b0908}
+pre b{font-weight:600;color:#f4ecdb}
+.k{color:#8fb0d6;font-weight:600} .s{color:#9ac9a5} .cm{color:#7d7261;font-style:italic}
+.o{color:#e08a70}
+.codebar{display:flex;gap:2px;margin-bottom:-1px;flex-wrap:wrap}
+.tab{font:600 12px var(--mono);padding:10px 14px;border:1px solid var(--rule);
+  border-bottom:0;background:var(--bg-2);color:var(--ink-3);cursor:pointer;min-height:40px}
+.tab[aria-selected="true"]{background:var(--deep);color:#f4ecdb;border-color:var(--rule-2)}
+:root[data-theme="dark"] .tab[aria-selected="true"]{background:#0b0908}
+.pane{display:none} .pane.on{display:block}
 
-/* ── mechanism: a turning wheel, because he built water clocks ─────────── */
-.wheel{animation:turn 34s linear infinite;transform-origin:center}
+/* reveal */
+.rv{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s var(--e)}
+.rv.in{opacity:1;transform:none}
+
+/* chart */
+.chart{display:grid;gap:14px;margin-top:30px}
+.row{display:grid;grid-template-columns:132px 1fr 56px;gap:14px;align-items:center;font-size:13.5px}
+@media(max-width:620px){.row{grid-template-columns:96px 1fr 44px;gap:10px;font-size:12.5px}}
+.track{height:30px;background:var(--bg-2);border:1px solid var(--rule);position:relative;overflow:hidden}
+.band.dark .track{background:#191410;border-color:#332b23}
+.fill{height:100%;width:0;transition:width 1.1s var(--e);background:var(--mad)}
+.fill.good{background:var(--verd)}
+.row .v{font:600 13px var(--mono);color:var(--ink-3);text-align:right}
+.band.dark .row .v{color:#9c9080}
+
+/* anim stage */
+.stage{background:var(--card);border:1px solid var(--rule);padding:26px 24px;margin-top:34px}
+.band.dark .stage{background:#191410;border-color:#332b23}
+.tl{display:grid;gap:0}
+.ev{display:grid;grid-template-columns:118px 1fr;gap:16px;padding:13px 0;
+  border-bottom:1px dashed var(--rule);opacity:.2;transition:opacity .5s var(--e)}
+.band.dark .ev{border-color:#332b23}
+.ev:last-child{border-bottom:0}
+.ev .t{font:600 12px var(--mono);color:var(--mad)}
+.ev .d{font-size:14px}
+.ev .m{font:12px var(--mono);color:var(--ink-3);display:block;margin-top:3px}
+[data-step="1"] .e1,[data-step="2"] .e1,[data-step="3"] .e1,[data-step="4"] .e1,[data-step="5"] .e1,
+[data-step="2"] .e2,[data-step="3"] .e2,[data-step="4"] .e2,[data-step="5"] .e2,
+[data-step="3"] .e3,[data-step="4"] .e3,[data-step="5"] .e3,
+[data-step="4"] .e4,[data-step="5"] .e4,
+[data-step="5"] .e5{opacity:1}
+.replay{margin-top:20px;min-height:44px;padding:0 20px;border:1px solid var(--rule-2);
+  background:transparent;color:inherit;font:600 13px var(--ui);cursor:pointer;border-radius:2px}
+.replay:hover{border-color:var(--mad);color:var(--mad)}
+
+/* wheel */
+.wheel{animation:turn 30s linear infinite;transform-origin:center}
 @keyframes turn{to{transform:rotate(360deg)}}
-.tick-path{stroke-dasharray:4 5;animation:march 1.4s linear infinite}
+.march{stroke-dasharray:4 5;animation:march 1.3s linear infinite}
 @keyframes march{to{stroke-dashoffset:-18}}
-
-figure{margin:0}
-figure svg{display:block;width:100%;height:auto}
-.s-ink{fill:var(--ink)} .s-mut{fill:var(--ink-3)} .s-mad{fill:var(--madder)}
-.s-line{stroke:var(--rule-2);fill:none;stroke-width:1.2}
+figure{margin:30px 0 0} figure svg{display:block;width:100%;height:auto}
+.s-line{stroke:var(--rule-2);fill:none;stroke-width:1.3}
 .s-thin{stroke:var(--rule);fill:none;stroke-width:1}
-.s-mono{font-family:var(--mono);font-size:10px}
-.s-ttl{font-family:var(--ui);font-size:12px;font-weight:600}
+.s-ink{fill:var(--ink)} .s-mut{fill:var(--ink-3)} .s-mad{fill:var(--mad)}
+.s-mono{font-family:var(--mono);font-size:10.5px} .s-ttl{font:600 12px var(--ui)}
+.band.dark .s-ink{fill:#f0e9dc} .band.dark .s-mut{fill:#9c9080}
+.band.dark .s-line{stroke:#4b4136} .band.dark .s-thin{stroke:#332b23}
 
-.note{border-left:2px solid var(--madder);background:var(--madder-soft);
-  padding:15px 18px;margin:18px 0}
-.note p{margin:0;max-width:none}
-.grid{display:grid;gap:18px}
-@media(min-width:720px){.grid.two{grid-template-columns:1fr 1fr}}
-footer{padding:34px 0 62px;border-top:1px solid var(--rule);font-size:13.5px;color:var(--ink-3)}
-.themebtn{position:fixed;right:14px;top:14px;z-index:20;min-height:44px;padding:0 15px;
-  border:1px solid var(--rule-2);background:var(--raise);color:var(--ink);
-  font:600 12px var(--ui);cursor:pointer}
-
+.note{border-left:2px solid var(--mad);background:var(--mad-soft);padding:16px 20px;margin:24px 0}
+.note p{margin:0}
+.split{display:grid;gap:34px;align-items:start}
+@media(min-width:860px){.split{grid-template-columns:1fr 1fr;gap:48px}}
+footer{background:var(--deep);color:#cdc2ae;padding:60px 0}
+footer a{color:var(--gold)}
+.themebtn{position:fixed;right:16px;bottom:16px;z-index:50;min-height:44px;padding:0 16px;
+  border:1px solid var(--rule-2);background:var(--card);color:var(--ink);
+  font:600 12px var(--ui);cursor:pointer;border-radius:2px}
 @media(prefers-reduced-motion:reduce){
-  .reveal{opacity:1;transform:none;transition:none}
+  .rv{opacity:1;transform:none;transition:none}
   .kin span{opacity:1;transform:none;animation:none}
-  .layer{opacity:1}
-  .wheel,.tick-path{animation:none}
+  .mesh,.wheel,.march{animation:none}
+  .ev{opacity:1} .fill{transition:none}
 }
 </style>
 </head>
 <body>
-<button class="themebtn" id="theme" type="button">Theme</button>
 
-<header class="hero">
-  <div class="tess" aria-hidden="true"></div>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><i></i>jazari</a>
+    <a class="l" href="#layers">Layers</a>
+    <a class="l" href="#use">Usage</a>
+    <a class="l" href="#runs">Runs</a>
+    <a class="l" href="#mcp">MCP</a>
+    <a class="l" href="#why">Name</a>
+    <span class="spacer"></span>
+    <a class="navcta" href="https://github.com/nauman/jazari">GitHub</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="mesh" aria-hidden="true"></div>
   <div class="wrap">
     <p class="eyebrow">Ruby · Rails · PostgreSQL · MIT</p>
-    <h1 class="kin">Procedures you can call.</h1>
-    <p class="lede" style="margin-top:18px">
+    <h1 class="kin" style="margin-top:14px">Procedures you can call.</h1>
+    <p class="lede" style="margin-top:22px">
       Not documents you hope someone reads. Recipes as data, per-subject runbooks,
       stable names for rituals that outlive any record, and per-run evidence — so
       <em>“did last night’s run actually complete?”</em> is a query.
     </p>
     <div class="cta">
-      <a class="btn primary" href="https://github.com/nauman/jazari">GitHub</a>
-      <a class="btn" href="https://rubygems.org/gems/jazari">RubyGems</a>
-      <a class="btn" href="https://kuickr.co/jazari/guide">Guides</a>
-      <a class="btn" href="#why">Why “Jazari”?</a>
+      <a class="btn p" href="https://rubygems.org/gems/jazari">gem install jazari</a>
+      <a class="btn" href="https://kuickr.co/jazari/guide">Read the guides</a>
+      <a class="btn" href="#use">See the code</a>
     </div>
-<pre style="margin-top:30px;max-width:520px"><span class="c-key">gem</span> <span class="c-str">"jazari"</span>, <span class="c-str">"~&gt; 0.2"</span>
 
-<span class="c-com"># one migration, copied deliberately</span>
-bin/rails generate jazari:install</pre>
+    <div class="stats rv">
+      <div class="stat"><b data-count="4">0</b><span>layers</span></div>
+      <div class="stat"><b data-count="4">0</b><span>tables</span></div>
+      <div class="stat"><b data-count="75">0</b><span>tests</span></div>
+      <div class="stat"><b data-count="2">0</b><span>dependencies</span></div>
+    </div>
   </div>
 </header>
 
-<main class="wrap">
+<!-- ══ the problem, as a chart ═══════════════════════════════════════════ -->
+<section class="band alt" id="problem">
+  <div class="wrap">
+    <p class="eyebrow rv">The problem</p>
+    <h2 class="rv" style="margin-top:10px">A checklist knows its state.<br>It knows nothing else.</h2>
+    <p class="lede rv" style="margin-top:18px">Four questions an attached checklist cannot answer —
+      and the one that matters most is the one it destroys when you reset it.</p>
 
-  <section>
-    <p class="eyebrow">I · the mechanism</p>
-    <h2>Four layers</h2>
-    <p class="muted">Each answers a question the one above it cannot.</p>
-
-    <div class="plate reveal">
-      <span class="plate-no">Plate I</span>
-      <div class="anim-stage" id="stack" data-anim-step="4">
-        <div class="layer step-1">
-          <div class="fig">I</div>
-          <div>
-            <h3>Recipe — the canon</h3>
-            <p>How this ritual is done. Data, not code: operator-editable at runtime and
-               digest-versioned, so fixing a procedure is a write rather than a deploy.</p>
-            <span class="q">“how is this done?”</span>
-          </div>
-        </div>
-        <div class="layer step-2">
-          <div class="fig">II</div>
-          <div>
-            <h3>Runbook — one subject’s override</h3>
-            <p>How <em>this</em> record differs. Materialised on first edit; reading a
-               default writes nothing at all.</p>
-            <span class="q">“how does THIS one differ?”</span>
-          </div>
-        </div>
-        <div class="layer step-3">
-          <div class="fig">III</div>
-          <div>
-            <h3>Queue — a name you can always call</h3>
-            <p>For rituals that belong to no record. The name is the contract, so whatever
-               carries the truth today can move without breaking the call.</p>
-            <span class="q">“what do I call it?”</span>
-          </div>
-        </div>
-        <div class="layer step-4">
-          <div class="fig">IV</div>
-          <div>
-            <h3>Run — one execution</h3>
-            <p>Who, when, which ticks, what evidence. The layer most systems skip.</p>
-            <span class="q">“did it actually happen?”</span>
-          </div>
-        </div>
-      </div>
-      <button class="anim-replay" id="replay" type="button">Replay</button>
-      <p class="plate-cap">Fig. 1 — Most systems stop at II. III makes a procedure
-        <em>callable</em>; IV makes it <em>auditable</em>.</p>
+    <div class="chart rv" id="chart">
+      <div class="row"><span>Current state</span>
+        <div class="track"><div class="fill good" data-w="100"></div></div><span class="v">yes</span></div>
+      <div class="row"><span>Is it current?</span>
+        <div class="track"><div class="fill" data-w="0"></div></div><span class="v">no</span></div>
+      <div class="row"><span>Who ran it?</span>
+        <div class="track"><div class="fill" data-w="0"></div></div><span class="v">no</span></div>
+      <div class="row"><span>What did they see?</span>
+        <div class="track"><div class="fill" data-w="0"></div></div><span class="v">no</span></div>
+      <div class="row"><span>Did it complete?</span>
+        <div class="track"><div class="fill" data-w="0"></div></div><span class="v">no</span></div>
     </div>
-  </section>
 
-  <section>
-    <p class="eyebrow">II · in use</p>
-    <h2>Thirty seconds</h2>
-    <p>Seed a procedure. Address it by name. Open a run, work it, attach what you saw.</p>
+    <div class="note rv" style="max-width:66ch">
+      <p>The usual fix is a checklist attached to a record. That helps, then runs out: some
+      procedures belong to <strong>no record at all</strong>, and a checklist you
+      <span class="mono">reset</span> to run again has just destroyed the evidence it ever ran.</p>
+    </div>
+  </div>
+</section>
 
-    <div class="plate reveal">
-      <span class="plate-no">Plate II</span>
-      <p class="code-label">1 · the canon — your content, never the gem’s</p>
-<pre><b>Jazari::RecipeRegistry</b>.seed!([
-  { id: <span class="c-str">"backup.verify.v1"</span>,
-    topic: <span class="c-str">"Prove a backup by restoring it"</span>,
-    description: <span class="c-str">"## Purpose\n\nA green schedule is not a verified backup."</span>,
-    run_policy: <span class="c-str">"once_per_calendar_day"</span>,
+<!-- ══ four layers as cards ══════════════════════════════════════════════ -->
+<section class="band" id="layers">
+  <div class="wrap">
+    <p class="eyebrow rv">The mechanism</p>
+    <h2 class="rv" style="margin-top:10px">Four layers</h2>
+    <p class="lede rv" style="margin-top:16px">Each answers a question the one above it cannot.
+      Most systems stop at the second.</p>
+
+    <div class="cards c4 rv">
+      <div class="card"><span class="n">I · RECIPE</span>
+        <h3>The canon</h3>
+        <p>How this ritual is done. Data, not code — operator-editable at runtime and
+          digest-versioned, so fixing a procedure is a write, not a deploy.</p>
+        <span class="q">“how is this done?”</span></div>
+      <div class="card"><span class="n">II · RUNBOOK</span>
+        <h3>One subject’s override</h3>
+        <p>How <em>this</em> record differs. Materialised on first edit; reading a default
+          writes nothing at all.</p>
+        <span class="q">“how does THIS one differ?”</span></div>
+      <div class="card"><span class="n">III · QUEUE</span>
+        <h3>A name you can always call</h3>
+        <p>For rituals that belong to no record. The name is the contract, so whatever
+          carries the truth today can move without breaking the call.</p>
+        <span class="q">“what do I call it?”</span></div>
+      <div class="card"><span class="n">IV · RUN</span>
+        <h3>One execution</h3>
+        <p>Who, when, which ticks, what evidence. The layer most systems skip — and the one
+          that makes the opening question answerable.</p>
+        <span class="q">“did it actually happen?”</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ code, tabbed ══════════════════════════════════════════════════════ -->
+<section class="band alt" id="use">
+  <div class="wrap">
+    <p class="eyebrow rv">In use</p>
+    <h2 class="rv" style="margin-top:10px">Thirty seconds</h2>
+    <p class="lede rv" style="margin-top:16px">Seed a procedure. Address it by name. Open a run,
+      work it, attach what you saw.</p>
+
+    <div class="rv" style="margin-top:32px">
+      <div class="codebar" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-p="p1">1 · seed</button>
+        <button class="tab" role="tab" aria-selected="false" data-p="p2">2 · address</button>
+        <button class="tab" role="tab" aria-selected="false" data-p="p3">3 · run it</button>
+        <button class="tab" role="tab" aria-selected="false" data-p="p4">4 · answer</button>
+        <button class="tab" role="tab" aria-selected="false" data-p="p5">install</button>
+      </div>
+      <div class="pane on" id="p1"><pre><span class="cm"># Your content, never the gem's — it ships zero recipes.</span>
+<b>Jazari::RecipeRegistry</b>.seed!([
+  { id: <span class="s">"backup.verify.v1"</span>,
+    topic: <span class="s">"Prove a backup by restoring it"</span>,
+    description: <span class="s">"## Purpose\n\nA green schedule is not a verified backup."</span>,
+    run_policy: <span class="s">"once_per_calendar_day"</span>,
     checklist: [
-      { id: <span class="c-str">"dump"</span>,    text: <span class="c-str">"Dump to scratch"</span> },
-      { id: <span class="c-str">"restore"</span>, text: <span class="c-str">"Restore into a throwaway database"</span> },
-      { id: <span class="c-str">"counts"</span>,  text: <span class="c-str">"Compare table and row counts"</span> }
+      { id: <span class="s">"dump"</span>,    text: <span class="s">"Dump to scratch"</span> },
+      { id: <span class="s">"restore"</span>, text: <span class="s">"Restore into a throwaway database"</span> },
+      { id: <span class="s">"counts"</span>,  text: <span class="s">"Compare table and row counts"</span> }
     ] }
-])</pre>
+])
+<span class="cm"># seed! is create-if-missing — reseeding never overwrites an operator edit.</span></pre></div>
 
-      <p class="code-label" style="margin-top:22px">2 · address it by name — no record required</p>
-<pre>target = <b>Jazari::QueueTarget</b>.new(
-  queue: <span class="c-str">"backup-verify"</span>,
-  public_reference: { kind: <span class="c-str">"queue"</span> },
-  recipe_id: <span class="c-str">"backup.verify.v1"</span>
+      <div class="pane" id="p2"><pre><span class="cm"># A queue: a stable name for a ritual that belongs to no record.</span>
+target = <b>Jazari::QueueTarget</b>.new(
+  queue: <span class="s">"backup-verify"</span>,
+  public_reference: { kind: <span class="s">"queue"</span> },
+  recipe_id: <span class="s">"backup.verify.v1"</span>
 )
 
 <b>Jazari</b>.resolve(target: target).progress
-<span class="c-out">#=&gt; { done: 0, total: 3, percent: 0 }</span></pre>
+<span class="o">#=&gt; { done: 0, total: 3, percent: 0 }</span>
 
-      <p class="code-label" style="margin-top:22px">3 · a run, and the evidence</p>
-<pre>result = <b>Jazari</b>.open_run(target: target, actor_ref: <span class="c-str">"agent:nightly"</span>)
+<span class="cm"># Or attach to a record you own — you authorize first, always.</span>
+<b>Jazari::RecordTarget</b>.new(runbookable: site,
+  public_reference: { kind: <span class="s">"site"</span>, site: site.slug },
+  recipe_id: <span class="s">"site.maintenance.v1"</span>)</pre></div>
+
+      <div class="pane" id="p3"><pre>result = <b>Jazari</b>.open_run(target: target, actor_ref: <span class="s">"agent:nightly"</span>)
 run    = result[:run]
 
 <b>Jazari</b>.tick(run: run, expected_revision: run.lock_version,
-            item_id: <span class="c-str">"restore"</span>, done: <span class="c-key">true</span>, actor_ref: <span class="c-str">"agent:nightly"</span>)
+            item_id: <span class="s">"restore"</span>, done: <span class="k">true</span>, actor_ref: <span class="s">"agent:nightly"</span>)
 
 <b>Jazari</b>.attach_evidence(run: run.reload, expected_revision: run.lock_version,
-                       item_id: <span class="c-str">"counts"</span>, kind: <span class="c-str">"count"</span>, value: <span class="c-str">"4211 rows"</span>)
+                       item_id: <span class="s">"counts"</span>, kind: <span class="s">"count"</span>, value: <span class="s">"4211 rows"</span>)
 
 <b>Jazari</b>.close_run(run: run.reload, expected_revision: run.lock_version,
-                 outcome: <span class="c-str">"completed"</span>)</pre>
+                 outcome: <span class="s">"completed"</span>)
 
-      <p class="code-label" style="margin-top:22px">4 · the question that started all this</p>
-<pre><b>Jazari</b>.last_run(target: target).outcome
-<span class="c-out">#=&gt; "completed"</span></pre>
-      <p class="plate-cap">Fig. 2 — <span class="mono">resolve</span> also carries
-        <span class="mono">last_run</span>, so a single read answers whether the ritual is
-        actually happening.</p>
+<span class="cm"># Every mutation carries the revision from the read before it.</span>
+<span class="cm"># Mismatch raises revision_conflict instead of overwriting.</span></pre></div>
+
+      <div class="pane" id="p4"><pre><b>Jazari</b>.last_run(target: target).outcome
+<span class="o">#=&gt; "completed"</span>
+
+<span class="cm"># resolve carries it too, so ONE read answers the question:</span>
+<b>Jazari</b>.resolve(target: target).last_run
+<span class="o">#=&gt; { id: 4412, outcome: "completed", open: false,</span>
+<span class="o">#     started_at: 2026-08-10 03:00:04 UTC, finished_at: ... }</span></pre></div>
+
+      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.2"</span>
+
+bin/rails generate jazari:install
+bin/rails db:migrate
+
+<span class="cm"># One migration, copied deliberately. Jazari never auto-appends</span>
+<span class="cm"># migrations — a shared table appearing in someone's next</span>
+<span class="cm"># db:migrate unasked is how a gem loses trust in a fleet.</span></pre></div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section>
-    <p class="eyebrow">III · the escapement</p>
-    <h2>Idempotency belongs to the ritual</h2>
-    <p>Verifying a backup should happen once a day. Triaging an incident may happen five
-       times. So there is no global rule — each recipe declares its own.</p>
+<!-- ══ runs: animated timeline + wheel ═══════════════════════════════════ -->
+<section class="band dark" id="runs">
+  <div class="wrap">
+    <p class="eyebrow rv">The escapement</p>
+    <h2 class="rv" style="margin-top:10px">Idempotency belongs to the ritual</h2>
+    <p class="lede rv muted" style="margin-top:16px">Verifying a backup should happen once a day.
+      Triaging an incident may happen five times. So there is no global rule — each recipe
+      declares its own.</p>
 
-    <div class="plate reveal">
-      <span class="plate-no">Plate III</span>
-      <figure>
-        <svg viewBox="0 0 880 250" role="img" aria-label="open_run inserts first, catches the unique violation, and returns the existing run">
-          <g transform="translate(74,120)">
-            <g class="wheel">
-              <circle r="42" class="s-line"/>
-              <circle r="30" class="s-thin"/>
-              <g stroke="var(--rule-2)" stroke-width="1.2">
-                <line x1="0" y1="-42" x2="0" y2="-30"/><line x1="0" y1="30" x2="0" y2="42"/>
-                <line x1="-42" y1="0" x2="-30" y2="0"/><line x1="30" y1="0" x2="42" y2="0"/>
-                <line x1="-30" y1="-30" x2="-21" y2="-21"/><line x1="21" y1="21" x2="30" y2="30"/>
-                <line x1="30" y1="-30" x2="21" y2="-21"/><line x1="-21" y1="21" x2="-30" y2="30"/>
-              </g>
+    <div class="stage rv" id="stage" data-step="5">
+      <div class="tl">
+        <div class="ev e1"><span class="t">03:00:04</span><span class="d">cron calls <span class="mono">start</span>
+          <span class="m">INSERT first — a find-then-insert races</span></span></div>
+        <div class="ev e2"><span class="t">03:00:04</span><span class="d">run 4412 opens
+          <span class="m">created: true · idempotent_reuse: false</span></span></div>
+        <div class="ev e3"><span class="t">03:02:41</span><span class="d">network blip · cron retries
+          <span class="m">unique violation on the partial index</span></span></div>
+        <div class="ev e4"><span class="t">03:02:41</span><span class="d">run 4412 comes back
+          <span class="m">created: false · idempotent_reuse: true — it converges, it does not error</span></span></div>
+        <div class="ev e5"><span class="t">03:08:19</span><span class="d">closed · completed
+          <span class="m">3 ticks · 1 evidence · "4211 rows"</span></span></div>
+      </div>
+      <button class="replay" id="replay" type="button">Replay the night</button>
+    </div>
+
+    <figure class="rv">
+      <svg viewBox="0 0 880 200" role="img" aria-label="open_run inserts first, catches the unique violation, returns the existing run">
+        <g transform="translate(66,96)">
+          <g class="wheel">
+            <circle r="38" class="s-line"/><circle r="27" class="s-thin"/>
+            <g stroke="#4b4136" stroke-width="1.2">
+              <line x1="0" y1="-38" x2="0" y2="-27"/><line x1="0" y1="27" x2="0" y2="38"/>
+              <line x1="-38" y1="0" x2="-27" y2="0"/><line x1="27" y1="0" x2="38" y2="0"/>
+              <line x1="-27" y1="-27" x2="-19" y2="-19"/><line x1="19" y1="19" x2="27" y2="27"/>
+              <line x1="27" y1="-27" x2="19" y2="-19"/><line x1="-19" y1="19" x2="-27" y2="27"/>
             </g>
-            <circle r="4" class="s-mad"/>
           </g>
-          <text x="74" y="196" class="s-mono s-mut" text-anchor="middle">a nightly cron,</text>
-          <text x="74" y="210" class="s-mono s-mut" text-anchor="middle">retrying</text>
+          <circle r="3.5" class="s-mad"/>
+        </g>
+        <text x="66" y="166" class="s-mono s-mut" text-anchor="middle">nightly, retrying</text>
+        <path d="M114 96 L184 96" class="s-line march" marker-end="url(#a)"/>
+        <rect x="184" y="66" width="164" height="60" class="s-line" fill="none"/>
+        <text x="266" y="92" class="s-ttl s-ink" text-anchor="middle">INSERT first</text>
+        <text x="266" y="111" class="s-mono s-mut" text-anchor="middle">then catch the violation</text>
+        <path d="M348 82 L446 44" class="s-line" marker-end="url(#a)"/>
+        <path d="M348 112 L446 152" class="s-line" marker-end="url(#a)"/>
+        <text x="464" y="40" class="s-ttl s-ink">new run</text>
+        <text x="464" y="59" class="s-mono s-mut">created: true</text>
+        <text x="464" y="150" class="s-ttl s-ink">the same run, returned</text>
+        <text x="464" y="169" class="s-mono s-mad">created: false · idempotent_reuse: true</text>
+        <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#4b4136"/></marker></defs>
+      </svg>
+    </figure>
 
-          <path d="M126 120 L196 120" class="s-line tick-path" marker-end="url(#ar)"/>
-          <text x="161" y="111" class="s-mono s-mad" text-anchor="middle">start</text>
-
-          <rect x="196" y="88" width="176" height="66" class="s-line" fill="var(--raise)"/>
-          <text x="284" y="114" class="s-ttl s-ink" text-anchor="middle">INSERT first</text>
-          <text x="284" y="133" class="s-mono s-mut" text-anchor="middle">find-then-insert races</text>
-
-          <path d="M372 104 L466 60" class="s-line" marker-end="url(#ar)"/>
-          <text x="404" y="74" class="s-mono s-mut">ok</text>
-          <path d="M372 138 L466 190" class="s-line" marker-end="url(#ar)"/>
-          <text x="378" y="180" class="s-mono s-mad">unique violation</text>
-
-          <rect x="466" y="26" width="404" height="62" class="s-thin" fill="var(--raise)"/>
-          <text x="484" y="50" class="s-ttl s-ink">a new run opens</text>
-          <text x="484" y="70" class="s-mono s-mut">{ created: true, idempotent_reuse: false }</text>
-
-          <rect x="466" y="158" width="404" height="76" class="s-line" fill="var(--raise)"/>
-          <text x="484" y="182" class="s-ttl s-ink">the existing run comes back</text>
-          <text x="484" y="202" class="s-mono s-mut">{ created: false, idempotent_reuse: true }</text>
-          <text x="484" y="221" class="s-mono s-mad">the cron converges — it does not error</text>
-
-          <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M0 0 L10 5 L0 10 z" fill="var(--rule-2)"/></marker></defs>
-        </svg>
-        <p class="plate-cap">Fig. 3 — Enforced by a partial unique index, not by application logic.</p>
-      </figure>
-
-<pre style="margin-top:20px"><span class="c-com"># the recipe decides, not the system</span>
-run_policy: <span class="c-str">"unrestricted"</span>            <span class="c-com"># every call opens a run</span>
-run_policy: <span class="c-str">"once_per_calendar_day"</span>   <span class="c-com"># one per subject per UTC day</span>
-
-<b>Jazari</b>.open_run(target: target, actor_ref: <span class="c-str">"cron"</span>)
-<span class="c-out">#=&gt; { run: #&lt;Run id: 4412&gt;, created: false, idempotent_reuse: true }</span></pre>
-
-      <div class="note">
-        <p><strong>Two details that are easy to get wrong.</strong> The index
-        <span class="mono">COALESCE</span>s the nullable polymorphic subject — otherwise queue
-        runs are unconstrained entirely, because <span class="mono">NULL != NULL</span>. And the
-        day is <strong>UTC</strong> via <span class="mono">timestamptz</span>, so one nightly
-        ritual cannot land on two different days depending on which region’s machine called
-        it.</p>
+    <div class="split" style="margin-top:40px">
+      <div class="rv"><pre><span class="cm"># the recipe decides, not the system</span>
+run_policy: <span class="s">"unrestricted"</span>
+run_policy: <span class="s">"once_per_calendar_day"</span></pre></div>
+      <div class="rv">
+        <h3 style="margin-bottom:10px">Two details easy to get wrong</h3>
+        <p class="muted" style="font-size:14.5px">The index <span class="mono">COALESCE</span>s the
+          nullable polymorphic subject — otherwise queue runs are unconstrained entirely, because
+          <span class="mono">NULL != NULL</span>.</p>
+        <p class="muted" style="font-size:14.5px;margin:0">And the day is <strong>UTC</strong> via
+          <span class="mono">timestamptz</span>, so one nightly ritual cannot land on two different
+          days depending on which region’s machine called it.</p>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section>
-    <p class="eyebrow">IV · the parts</p>
-    <h2>Four tables</h2>
-    <div class="plate reveal">
-      <span class="plate-no">Plate IV</span>
-      <figure>
-        <svg viewBox="0 0 880 330" role="img" aria-label="recipes, runbooks, anchors and runs and their relationships">
-          <rect x="8" y="16" width="240" height="128" class="s-line" fill="var(--raise)"/>
-          <text x="24" y="40" class="s-ttl s-ink">jazari_recipes</text>
-          <line x1="8" y1="50" x2="248" y2="50" class="s-thin"/>
-          <text x="24" y="70" class="s-mono s-ink">recipe_id · unique</text>
-          <text x="24" y="88" class="s-mono s-mut">topic · description · checklist</text>
-          <text x="24" y="106" class="s-mono s-mad">run_policy</text>
-          <text x="24" y="130" class="s-mono s-mut">the canon</text>
+<!-- ══ mcp ═══════════════════════════════════════════════════════════════ -->
+<section class="band" id="mcp">
+  <div class="wrap">
+    <p class="eyebrow rv">Fitting it to your machine</p>
+    <h2 class="rv" style="margin-top:10px">Keep your own MCP tool</h2>
+    <div class="split" style="margin-top:26px">
+      <div class="rv">
+        <p>The MCP layer is optional — the dispatcher is not even loaded unless you ask for it.
+          If you already have a tool, absorb the actions into it and keep your own dispatch,
+          envelope, naming, and permissions.</p>
+        <p class="muted" style="font-size:14.5px">The descriptors are the single source of truth:
+          the shipped handler validates against the same list, so a published schema and the
+          implemented behaviour cannot drift.</p>
+      </div>
+      <div class="rv"><pre>frag = <b>Jazari::Mcp::Actions</b>.schema_fragment
 
-          <rect x="320" y="16" width="240" height="128" class="s-line" fill="var(--raise)"/>
-          <text x="336" y="40" class="s-ttl s-ink">jazari_runbooks</text>
-          <line x1="320" y1="50" x2="560" y2="50" class="s-thin"/>
-          <text x="336" y="70" class="s-mono s-ink">runbookable · polymorphic</text>
-          <text x="336" y="88" class="s-mono s-mad">recipe_id → the canon</text>
-          <text x="336" y="106" class="s-mono s-mut">lock_version</text>
-          <text x="336" y="130" class="s-mono s-mut">one subject’s override</text>
+MY_TOOL[:properties][:action][:enum] += frag[:enum]
+MY_TOOL[:properties].merge!(frag[:properties])
 
-          <rect x="632" y="16" width="240" height="128" class="s-line" fill="var(--raise)"/>
-          <text x="648" y="40" class="s-ttl s-ink">jazari_anchors</text>
-          <line x1="632" y1="50" x2="872" y2="50" class="s-thin"/>
-          <text x="648" y="70" class="s-mono s-ink">scope + key · unique</text>
-          <text x="648" y="92" class="s-mono s-mut">a stable target for anything</text>
-          <text x="648" y="110" class="s-mono s-mut">that is not a row — a tree</text>
-          <text x="648" y="128" class="s-mono s-mut">node, a path, a DNS zone</text>
+<span class="cm"># then dispatch to Jazari.* yourself</span>
 
-          <rect x="164" y="204" width="552" height="112" class="s-line" fill="var(--raise)"/>
-          <text x="180" y="228" class="s-ttl s-ink">jazari_runs</text>
-          <line x1="164" y1="238" x2="716" y2="238" class="s-thin"/>
-          <text x="180" y="258" class="s-mono s-mut">recipe_id · source_digest · subject (nullable → a queue run)</text>
-          <text x="180" y="276" class="s-mono s-ink">started_at timestamptz · started_on utc date</text>
-          <text x="180" y="294" class="s-mono s-mut">checklist_snapshot · ticks · evidence · outcome</text>
-          <text x="180" y="312" class="s-mono s-mad">partial unique: recipe + COALESCE(subject) + day</text>
-
-          <path d="M248 82 L320 82" class="s-line" marker-end="url(#ar2)"/>
-          <text x="256" y="74" class="s-mono s-mut">default</text>
-          <path d="M560 96 L632 96" class="s-line" marker-end="url(#ar2)"/>
-          <text x="568" y="88" class="s-mono s-mut">target</text>
-          <path d="M128 144 C128 190, 152 196, 200 204" class="s-line tick-path" marker-end="url(#ar2)"/>
-          <text x="20" y="184" class="s-mono s-mut">opened against</text>
-          <path d="M440 144 L440 204" class="s-line" marker-end="url(#ar2)"/>
-          <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M0 0 L10 5 L0 10 z" fill="var(--rule-2)"/></marker></defs>
-        </svg>
-        <p class="plate-cap">Fig. 4 — The checklist stays JSONB: atomic revision guarding beats
-          per-item history, and <span class="mono">runs</span> supplies the history properly.</p>
-      </figure>
+a = <b>Jazari::Mcp::Actions</b>.fetch(<span class="s">"reset"</span>)
+a.effect     <span class="o">#=&gt; :destructive</span>
+a.confirm?   <span class="o">#=&gt; true</span></pre></div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section>
-    <p class="eyebrow">V · fitting it to your machine</p>
-    <h2>Keep your own MCP tool</h2>
-    <p>The MCP layer is optional and the dispatcher is not even loaded unless you ask for it.
-       If you already have a tool, absorb the actions into it and keep your own dispatch,
-       envelope, naming, and permissions.</p>
-
-    <div class="plate reveal">
-      <span class="plate-no">Plate V</span>
-<pre>frag = <b>Jazari::Mcp::Actions</b>.schema_fragment          <span class="c-com"># or scope: :read</span>
-
-MY_TOOL[:input_schema][:properties][:action][:enum] += frag[:enum]
-MY_TOOL[:input_schema][:properties].merge!(frag[:properties])
-
-<span class="c-com"># then dispatch to Jazari.* yourself — no handler, no coupling</span></pre>
-
-<pre style="margin-top:16px">a = <b>Jazari::Mcp::Actions</b>.fetch(<span class="c-str">"reset"</span>)
-a.effect     <span class="c-out">#=&gt; :destructive</span>
-a.confirm?   <span class="c-out">#=&gt; true</span>
-a.summary    <span class="c-out">#=&gt; "Discard this subject's override and reveal the current canon."</span></pre>
-      <p class="plate-cap">Fig. 5 — The descriptors are the single source of truth; the shipped
-        handler validates against the same list, so a published schema and the implemented
-        behaviour cannot drift.</p>
-    </div>
-  </section>
-
-  <section id="why">
-    <p class="eyebrow">VI · the name</p>
-    <h2>Why “Jazari”</h2>
-    <div class="grid two reveal">
-      <div>
+<!-- ══ why ═══════════════════════════════════════════════════════════════ -->
+<section class="band alt" id="why">
+  <div class="wrap">
+    <p class="eyebrow rv">The name</p>
+    <h2 class="rv" style="margin-top:10px">Why “Jazari”</h2>
+    <div class="split" style="margin-top:26px">
+      <div class="rv">
         <p>Ismail <strong>al-Jazari</strong> (1136–1206) was an engineer at the Artuqid court in
           Diyarbakır. He built programmable automata — a hand-washing machine that offered you a
           towel, a clock driven by a water wheel, pumps with the earliest known crankshafts.</p>
         <p><strong>That is not why the gem carries his name.</strong></p>
+        <p class="muted" style="font-size:14.5px"><span class="mono">runbook</span> was already
+          taken on RubyGems — by a DSL for <em>executing</em> procedures, last released in 2021.
+          The name is occupied; the project is not one to build on.</p>
       </div>
-      <div>
+      <div class="rv">
         <div class="note" style="margin-top:0">
-          <p>He also wrote <em>The Book of Knowledge of Ingenious Mechanical Devices</em>,
-          finished the year he died: fifty machines, each with numbered construction steps and
-          drawings detailed enough that a stranger who had never met him could rebuild the
-          device — including, in his own words, the steps he had gotten wrong first.</p>
+          <p>He also wrote <em>The Book of Knowledge of Ingenious Mechanical Devices</em>, finished
+          the year he died: fifty machines, each with numbered construction steps and drawings
+          detailed enough that a stranger who had never met him could rebuild the device —
+          including, in his own words, the steps he had gotten wrong first.</p>
         </div>
+        <p style="margin-top:18px">Eight hundred years later, people have built working machines
+          from those pages.</p>
+        <p style="margin:0">A procedure is not lore in someone’s head or prose in a document nobody
+          opens. It is a written, versioned, checkable artefact that somebody else can execute —
+          and prove they executed.</p>
       </div>
     </div>
-    <p class="reveal">Eight hundred years later, people have built working machines from those
-      pages.</p>
-    <p class="reveal">That is the whole idea here. A procedure is not lore in someone’s head or
-      prose in a document nobody opens. It is a written, versioned, checkable artefact that
-      somebody else can execute — and prove they executed.</p>
-    <p class="reveal muted"><span class="mono">runbook</span> was already taken on RubyGems — by a
-      DSL for <em>executing</em> procedures, last released in 2021. The name is occupied; the
-      project is not one to build on.</p>
-  </section>
+  </div>
+</section>
 
-  <section>
-    <p class="eyebrow">VII · scope</p>
-    <h2>What this is not</h2>
-    <p>Not an execution framework. Jazari holds the <em>state</em> of a procedure — the canon,
-      the overrides, the runs, the evidence. It does not SSH anywhere, shell out, or run your
-      commands.</p>
-    <p>That boundary is deliberate. Execution is already served by whatever you have — CI, a
-      rake task, a deploy tool — and it differs per shop. What none of them keep is a durable,
-      addressable record of <em>which procedure</em> ran, by whom, and what came back.</p>
-    <div class="cta">
-      <a class="btn primary" href="https://github.com/nauman/jazari">Read the README</a>
+<!-- ══ scope + cta ═══════════════════════════════════════════════════════ -->
+<section class="band">
+  <div class="wrap narrow" style="text-align:center">
+    <p class="eyebrow rv">Scope</p>
+    <h2 class="rv" style="margin-top:10px">Not an execution framework</h2>
+    <p class="lede rv" style="margin:18px auto 0">Jazari holds the <em>state</em> of a procedure.
+      It does not SSH anywhere, shell out, or run your commands — execution is served by whatever
+      you already have. What none of them keep is a durable, addressable record of
+      <em>which procedure</em> ran, by whom, and what came back.</p>
+    <div class="cta rv" style="justify-content:center">
+      <a class="btn p" href="https://github.com/nauman/jazari">GitHub</a>
       <a class="btn" href="https://kuickr.co/jazari/guide">Six guides</a>
+      <a class="btn" href="https://rubygems.org/gems/jazari">RubyGems</a>
     </div>
-  </section>
-</main>
+  </div>
+</section>
 
-<footer class="wrap">
-  <p>MIT licensed · <span class="mono">gem install jazari</span> · built by
-    <a href="https://nauman.one">nauman.one</a></p>
+<footer>
+  <div class="wrap">
+    <p style="margin:0"><span class="mono">gem install jazari</span> · MIT · built by
+      <a href="https://nauman.one">nauman.one</a></p>
+  </div>
 </footer>
+
+<button class="themebtn" id="theme" type="button">Theme</button>
 
 <script>
 (function(){
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   document.querySelectorAll('.kin').forEach(function(h){
-    var words = h.textContent.trim().split(' ');
-    h.textContent = '';
-    words.forEach(function(w, i){
-      var s = document.createElement('span');
-      s.textContent = w + ' ';
-      s.style.animationDelay = (i * 95) + 'ms';
-      h.appendChild(s);
-    });
+    var w = h.textContent.trim().split(' '); h.textContent = '';
+    w.forEach(function(x,i){ var s=document.createElement('span');
+      s.textContent = x+' '; s.style.animationDelay=(i*95)+'ms'; h.appendChild(s); });
   });
+
+  function countUp(el){
+    var target = +el.dataset.count, n = 0, steps = 26;
+    if (reduce){ el.textContent = target; return; }
+    var iv = setInterval(function(){
+      n += Math.ceil(target/steps);
+      if (n >= target){ n = target; clearInterval(iv); }
+      el.textContent = n;
+    }, 34);
+  }
+
+  var seen = new WeakSet();
+  function activate(el){
+    if (seen.has(el)) return; seen.add(el);
+    el.classList.add('in');
+    el.querySelectorAll('[data-count]').forEach(countUp);
+    el.querySelectorAll('.fill').forEach(function(f, i){
+      setTimeout(function(){ f.style.width = f.dataset.w + '%'; }, 120 + i*110);
+    });
+  }
 
   if ('IntersectionObserver' in window && !reduce){
     var io = new IntersectionObserver(function(es){
-      es.forEach(function(e){
-        if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
-      });
-    }, {threshold:.1});
-    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+      es.forEach(function(e){ if(e.isIntersecting){ activate(e.target); io.unobserve(e.target); } });
+    }, {threshold:.15});
+    document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
   } else {
-    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+    document.querySelectorAll('.rv').forEach(activate);
   }
 
-  /* .anim contract: JS only advances data-anim-step; CSS performs every reveal. */
-  var stage = document.getElementById('stack');
-  var timer;
+  /* tabs */
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(x){ x.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('on'); });
+      t.setAttribute('aria-selected','true');
+      document.getElementById(t.dataset.p).classList.add('on');
+    });
+  });
+
+  /* timeline: JS advances a step, CSS reveals */
+  var stage = document.getElementById('stage'), timer;
   function play(){
-    clearInterval(timer);
-    var n = 0;
-    stage.setAttribute('data-anim-step', '0');
-    timer = setInterval(function(){
-      n += 1;
-      stage.setAttribute('data-anim-step', String(n));
-      if (n >= 4){ clearInterval(timer); }
-    }, 780);
+    clearInterval(timer); var n = 0; stage.setAttribute('data-step','0');
+    timer = setInterval(function(){ stage.setAttribute('data-step', String(++n));
+      if (n >= 5) clearInterval(timer); }, 760);
   }
   document.getElementById('replay').addEventListener('click', play);
-
   if (!reduce && 'IntersectionObserver' in window){
     var once = new IntersectionObserver(function(es){
-      es.forEach(function(e){ if (e.isIntersecting){ play(); once.disconnect(); } });
-    }, {threshold:.35});
+      es.forEach(function(e){ if(e.isIntersecting){ play(); once.disconnect(); } });
+    }, {threshold:.3});
     once.observe(stage);
   }
 
   document.getElementById('theme').addEventListener('click', function(){
-    var cur = document.documentElement.getAttribute('data-theme');
-    document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+    var c = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', c === 'dark' ? 'light' : 'dark');
   });
 })();
 </script>
