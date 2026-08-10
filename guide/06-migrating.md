@@ -98,6 +98,31 @@ vanishes silently.
 
 Backfill on `text present OR items present`.
 
+## Seeded in Ruby is not seeded
+
+Two hosts in a row shipped a `seed!` method that nothing outside their tests ever
+called. The recipes existed in Ruby and never in a table, and because a pointer at
+a missing recipe resolves to the **empty recipe** rather than raising, the symptom
+is an operator reading "this subject has no ritual" as "no ritual is needed."
+
+`db/seeds.rb` does not fix it. Boot typically runs `db:prepare`, which seeds only
+on **first create** — an existing database never sees it. Put it in a data
+migration, which runs once on every database that has not run it yet:
+
+```ruby
+class SeedRecipes < ActiveRecord::Migration[8.0]
+  def up = MyRecipes.seed!
+
+  def down
+    # Not destructive: by now these rows may carry operator edits.
+  end
+end
+```
+
+Safe on every deploy, because `Jazari::RecipeRegistry.seed!` is create-if-missing
+and an operator's edit wins once the row exists. **Grep for the caller before you
+believe a seed runs.**
+
 ## Verify with row-count equality
 
 Not a spot check:
@@ -108,6 +133,15 @@ raise "backfill lost items" unless total_jsonb_items == LegacyItem.count
 
 Know the target number before you start. If it does not match, **stop** — do not
 fix forward.
+
+Wrap the backfill in **its own transaction**, not the migration runner's. A check
+that raises after writing has already written; it only guards anything if the
+shortfall un-writes what it wrote, and inheriting that from an enclosing
+transaction makes the guarantee something a caller can remove without noticing.
+
+```ruby
+def up = ActiveRecord::Base.transaction { backfill! }
+```
 
 ## Ordering
 
