@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Local-first CI gate (fleet doctrine: local-ci-doctrine).
+#
+# The gate runs HERE, before the push — not on a runner after it. A red push is
+# blocked rather than reported.
+#
+# GitHub Actions ALSO runs on every push and PR (this repo is public, so the
+# minutes are free and contributors do not have this hook). That does not make
+# this redundant: this is what stops a red commit from ever reaching the open,
+# and it is faster than waiting for a runner to tell you what you already know.
+#
+# Enable once per clone:   git config core.hooksPath .githooks
+# Bypass in an emergency:  git push --no-verify   (say so in the commit)
+set -euo pipefail
+
+# Docs-only pushes skip the suite — nothing executable changed.
+range="origin/main..HEAD"
+if git rev-parse --verify -q origin/main >/dev/null; then
+  changed="$(git diff --name-only $range || true)"
+else
+  changed="$(git ls-files)"
+fi
+if [ -n "$changed" ] && ! echo "$changed" | grep -qvE '^(docs/|README|CHANGELOG|LICENSE|\.githooks/)'; then
+  echo "pre-push: docs-only change, skipping the suite"
+  exit 0
+fi
+
+echo "pre-push: boundary + suite (postgres)"
+
+if ! command -v pg_isready >/dev/null || ! pg_isready -q; then
+  echo "pre-push: BLOCKED — PostgreSQL is not running."
+  echo "  This gem is Postgres-only; the suite exercises jsonb, timestamptz,"
+  echo "  four CHECK constraints, and a partial unique index."
+  echo "  Start it (e.g. brew services start postgresql@15) and push again."
+  exit 1
+fi
+
+ruby -e 'require "rake"; load "Rakefile"; Rake::Task[:default].invoke' || {
+  echo "pre-push: BLOCKED — the gate is red. Fix it, or push with --no-verify and say why."
+  exit 1
+}
+
+echo "pre-push: green"

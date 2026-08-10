@@ -1,0 +1,127 @@
+# frozen_string_literal: true
+
+require "jazari/version"
+require "jazari/errors"
+require "jazari/checklist"
+require "jazari/recipe"
+require "jazari/targets"
+require "jazari/resolved_runbook"
+require "jazari/recipe_registry"
+require "jazari/runs"
+require "jazari/operations"
+
+# Addressable operating procedures.
+#
+#   RECIPE   the canon - how this ritual is done. Data, not code.
+#   RUNBOOK  one subject's override of it.
+#   QUEUE    a stable name for a ritual that outlives any record.
+#   RUN      one execution - who, when, which ticks, what evidence.
+#
+# This module is the only public mutation interface. It never accepts a raw id,
+# an arbitrary record, or an actor: hosts authorize first, then pass exactly one
+# immutable target value.
+module Jazari
+  class << self
+    attr_accessor :configuration
+  end
+
+  Configuration = Struct.new(:actor_ref, :on_subject_destroyed, :anchor_scopes, :table_prefix) do
+    def initialize(*)
+      super
+      self.anchor_scopes ||= {}
+      self.table_prefix  ||= "jazari_"
+      self.actor_ref     ||= ->(actor) { "actor:#{actor.object_id}" }
+    end
+
+    # Fail at boot, not at first call.
+    def validate!
+      anchor_scopes.each_key do |scope|
+        raise ArgumentError, "anchor scope #{scope.inspect} must be a String" unless scope.is_a?(String)
+      end
+      true
+    end
+  end
+
+  TABLES = { recipes: "recipes", runbooks: "runbooks", anchors: "anchors", runs: "runs" }.freeze
+
+  def self.configure
+    self.configuration ||= Configuration.new
+    yield configuration if block_given?
+    configuration.validate!
+    apply_table_names!
+    configuration
+  end
+
+  def self.table_name_for(key) = "#{config.table_prefix}#{TABLES.fetch(key)}"
+
+  # A host may adopt these tables under existing names rather than renaming
+  # live tables in the same deploy as the cut-over.
+  #
+  # CONSTRAINT: ActiveRecord table names are process-global class state, so the
+  # prefix is a BOOT-TIME setting for the whole process. It is not per-request,
+  # per-thread, or per-tenant, and two hosts in one process cannot hold
+  # different prefixes. Call `configure` once, at boot, after the models are
+  # loaded; `models_loaded?` reports whether the binding actually took effect
+  # so a host can assert it instead of silently running on default names.
+  def self.models_loaded? = const_defined?(:RecipeRecord)
+
+  def self.apply_table_names!
+    return false unless models_loaded?
+
+    { RecipeRecord: :recipes, Runbook: :runbooks, Anchor: :anchors, Run: :runs }.each do |klass, key|
+      const_get(klass).table_name = table_name_for(key)
+    end
+    true
+  end
+
+  def self.config = configuration || configure
+
+  # The documented public interface (spec 02 section 3). `Runs` is the
+  # implementation; these are the names hosts and the MCP handler call.
+  class << self
+    def open_run(target:, actor_ref:, now: Time.now.utc)
+      Runs.open(target: target, actor_ref: actor_ref, now: now)
+    end
+
+    def tick(run:, expected_revision:, item_id:, done:, actor_ref:, note: nil)
+      Runs.tick(run: run, expected_revision: expected_revision, item_id: item_id,
+                done: done, actor_ref: actor_ref, note: note)
+    end
+
+    def attach_evidence(run:, expected_revision:, item_id:, kind:, value:)
+      Runs.attach_evidence(run: run, expected_revision: expected_revision,
+                           item_id: item_id, kind: kind, value: value)
+    end
+
+    def close_run(run:, expected_revision:, outcome:)
+      Runs.close(run: run, expected_revision: expected_revision, outcome: outcome)
+    end
+
+    def last_run(target:) = Runs.last(target: target)
+
+    def resolve(target:) = Operations.resolve(target: target)
+
+    def customize(target:, expected_revision:, topic:, description:, checklist:)
+      Operations.customize(target: target, expected_revision: expected_revision,
+                           topic: topic, description: description, checklist: checklist)
+    end
+
+    def add_item(target:, expected_revision:, text:, required: true)
+      Operations.add_item(target: target, expected_revision: expected_revision,
+                          text: text, required: required)
+    end
+
+    def remove_item(target:, expected_revision:, item_id:)
+      Operations.remove_item(target: target, expected_revision: expected_revision, item_id: item_id)
+    end
+
+    def check_item(target:, expected_revision:, item_id:, done:)
+      Operations.check_item(target: target, expected_revision: expected_revision,
+                            item_id: item_id, done: done)
+    end
+
+    def reset(target:, expected_revision:)
+      Operations.reset(target: target, expected_revision: expected_revision)
+    end
+  end
+end

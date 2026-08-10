@@ -1,0 +1,48 @@
+# TWO gates, deliberately (founder call 2026-08-10).
+#
+#   1. .githooks/pre-push — the LOCAL gate. Runs before a push, so a red suite
+#      never leaves the machine. This is the fleet's local-first doctrine and it
+#      stays: fast feedback, no waiting on a runner, nothing broken in the open.
+#
+#   2. This workflow — the PUBLIC gate. Runs on every push and PR. The fleet
+#      normally keeps CI on workflow_dispatch to avoid burning Actions minutes,
+#      but this repo is PUBLIC and open source, so minutes are free and the
+#      trade-off inverts: contributors do not have our git hooks, a PR from a
+#      stranger must be verified by something we control, and a visible green
+#      badge is part of how an open-source gem earns trust.
+#
+# The local hook is not made redundant by this; it is what keeps the public one
+# green.
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jazari_test
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      JAZARI_TEST_DATABASE: jazari_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - name: Boundary check and suite
+        run: bundle exec rake
