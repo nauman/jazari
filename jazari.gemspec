@@ -14,8 +14,7 @@ Gem::Specification.new do |spec|
   spec.metadata    = {
     "homepage_uri"    => "https://github.com/nauman/jazari",
     "source_code_uri" => "https://github.com/nauman/jazari",
-    "changelog_uri"   => "https://github.com/nauman/jazari/blob/main/CHANGELOG.md",
-    "rubygems_mfa_required" => "true"
+    "changelog_uri"   => "https://github.com/nauman/jazari/blob/main/CHANGELOG.md"
   }
 
   spec.summary     = "Addressable operating procedures: recipes, runbooks, queues, and per-run evidence."
