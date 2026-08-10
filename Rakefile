@@ -27,7 +27,7 @@ TEST_ALLOWED = %w[
   Jazari DummySubject
   ActiveRecord Minitest
   Time Date Object ENV DB
-  ArgumentError StandardError RuntimeError NameError NoMethodError TypeError
+  ArgumentError StandardError RuntimeError NameError NoMethodError TypeError KeyError
   String Symbol Integer Float Array Hash Struct Data Range Set
 ].freeze
 

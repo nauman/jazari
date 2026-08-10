@@ -26,11 +26,17 @@ module Jazari
     attr_accessor :configuration
   end
 
-  Configuration = Struct.new(:actor_ref, :on_subject_destroyed, :anchor_scopes, :table_prefix) do
+  Configuration = Struct.new(:actor_ref, :on_subject_destroyed, :anchor_scopes,
+                             :table_prefix, :table_names) do
     def initialize(*)
       super
       self.anchor_scopes ||= {}
       self.table_prefix  ||= "jazari_"
+      # Per-table overrides. A prefix alone is not enough for a host adopting
+      # tables it already has: existing names rarely follow one scheme, and
+      # renaming live tables in the same deploy as a cut-over is exactly what
+      # the adoption plan forbids. Any key omitted falls back to the prefix.
+      self.table_names   ||= {}
       self.actor_ref     ||= ->(actor) { "actor:#{actor.object_id}" }
     end
 
@@ -53,7 +59,10 @@ module Jazari
     configuration
   end
 
-  def self.table_name_for(key) = "#{config.table_prefix}#{TABLES.fetch(key)}"
+  def self.table_name_for(key)
+    TABLES.fetch(key) # raise early on an unknown key
+    config.table_names[key]&.to_s || "#{config.table_prefix}#{TABLES.fetch(key)}"
+  end
 
   # A host may adopt these tables under existing names rather than renaming
   # live tables in the same deploy as the cut-over.

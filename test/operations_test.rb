@@ -300,3 +300,29 @@ class ForgetSubjectTest < Minitest::Test
     assert Jazari.forget_subject(@subject)
   end
 end
+
+class TableNameOverrideTest < Minitest::Test
+  # A host adopting jazari onto tables it ALREADY has rarely finds that those
+  # names follow one prefix — and renaming live tables in the same deploy as a
+  # cut-over is precisely what an adoption plan forbids. So each table can be
+  # named explicitly, with the prefix as the fallback.
+  def test_individual_tables_can_be_named_explicitly
+    original = Jazari.config.table_names
+    Jazari.configure do |c|
+      c.table_prefix = "legacy_"
+      c.table_names = { anchors: "legacy_runbook_anchors", recipes: "legacy_runbook_recipes" }
+    end
+
+    assert_equal "legacy_runbook_anchors", Jazari::Anchor.table_name
+    assert_equal "legacy_runbook_recipes", Jazari::RecipeRecord.table_name
+    assert_equal "legacy_runbooks", Jazari::Runbook.table_name, "omitted keys fall back to the prefix"
+    assert_equal "legacy_runs", Jazari::Run.table_name
+  ensure
+    Jazari.configure { |c| c.table_prefix = "jazari_"; c.table_names = original || {} }
+    assert_equal "jazari_anchors", Jazari::Anchor.table_name
+  end
+
+  def test_an_unknown_table_key_raises_early
+    assert_raises(KeyError) { Jazari.table_name_for(:nonsense) }
+  end
+end
