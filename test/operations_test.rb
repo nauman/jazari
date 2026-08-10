@@ -326,3 +326,56 @@ class TableNameOverrideTest < Minitest::Test
     assert_raises(KeyError) { Jazari.table_name_for(:nonsense) }
   end
 end
+
+class AnchorResolverContractTest < Minitest::Test
+  # A host resolver must be told whether it may materialise the anchor.
+  # Without that, resolving a DEFAULT would create a row — breaking the rule
+  # that reading a default writes nothing at all.
+  def setup
+    Jazari::Run.delete_all
+    Jazari::Runbook.delete_all
+    Jazari::Anchor.delete_all
+    Jazari::RecipeRecord.delete_all
+    Jazari::RecipeRegistry.seed!([ { id: "canon.v1", topic: "T",
+      checklist: [ { id: "a", text: "A", done: false } ] } ])
+    @calls = []
+    Jazari.configure do |c|
+      c.anchor_scopes = { "Tree" => lambda do |target, create|
+        @calls << create
+        if create
+          Jazari::Anchor.create_or_find_by!(scope_type: target.scope_type,
+                                            scope_id: target.scope_id, key: target.key)
+        else
+          Jazari::Anchor.find_by(scope_type: target.scope_type,
+                                 scope_id: target.scope_id, key: target.key)
+        end
+      end }
+    end
+  end
+
+  def target
+    Jazari::AnchorTarget.new(scope_type: "Tree", scope_id: 1, key: "n1",
+                             public_reference: {}, recipe_id: "canon.v1")
+  end
+
+  def test_a_read_never_tells_the_resolver_it_may_create
+    Jazari::Operations.resolve(target: target)
+
+    # `resolve` asks twice — once to find a customization, once for last_run —
+    # and both must be lookups. Asserting the COUNT would pin an internal
+    # call pattern; what the contract actually promises is that no read ever
+    # permits creation.
+    refute_empty @calls
+    assert(@calls.none?, "no read may permit the resolver to create")
+    assert_equal 0, Jazari::Anchor.count, "reading a default must write nothing"
+  end
+
+  def test_a_write_tells_the_resolver_it_may_create
+    r = Jazari::Operations.resolve(target: target)
+    @calls.clear
+    Jazari::Operations.customize(target: target, expected_revision: r.revision,
+                                 topic: "Ours", description: "", checklist: [])
+    assert_includes @calls, true, "customizing must permit creation"
+    assert_equal 1, Jazari::Anchor.count
+  end
+end

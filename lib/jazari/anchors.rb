@@ -26,9 +26,12 @@ module Jazari
       resolver = scopes[target.scope_type]
       subject =
         if resolver.respond_to?(:call)
-          # The host owns creation as well as lookup: its table may demand
-          # columns the gem knows nothing about.
-          resolver.call(target)
+          # The host owns creation as well as lookup — its table may demand
+          # columns the gem knows nothing about — so it MUST be told whether
+          # creation is permitted. Without `create`, a host resolver would
+          # materialise an anchor on every read, breaking the rule that
+          # resolving a default writes nothing.
+          resolver.arity == 1 ? resolver.call(target) : resolver.call(target, create)
         elsif create
           Anchor.create_or_find_by!(scope_type: target.scope_type,
                                     scope_id: target.scope_id, key: target.key)
