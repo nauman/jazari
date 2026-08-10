@@ -153,8 +153,7 @@ module Jazari
     def runbookable_for(target)
       case target
       when RecordTarget then target.runbookable
-      when AnchorTarget
-        Anchor.create_or_find_by!(scope_type: target.scope_type, scope_id: target.scope_id, key: target.key)
+      when AnchorTarget then Anchors.resolve(target, strict: true, create: true)
       else raise TargetNotFound, "unsupported target"
       end
     end
@@ -170,7 +169,7 @@ module Jazari
       case target
       when RecordTarget then Runbook.find_by(runbookable: target.runbookable)
       when AnchorTarget
-        anchor = Anchor.find_by(scope_type: target.scope_type, scope_id: target.scope_id, key: target.key)
+        anchor = Anchors.resolve(target, strict: false)
         anchor && Runbook.find_by(runbookable: anchor)
       when QueueTarget then nil
       else raise TargetNotFound, "unsupported target"

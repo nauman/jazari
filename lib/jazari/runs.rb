@@ -166,41 +166,12 @@ module Jazari
     def subject_for(target, strict: true)
       case target
       when RecordTarget then target.runbookable
-      when AnchorTarget then resolve_anchor(target, strict: strict)
+      when AnchorTarget then Anchors.resolve(target, strict: strict)
       when QueueTarget  then nil
       else raise TargetNotFound, "unsupported target"
       end
     end
     private_class_method :subject_for
-
-    # Anchor scopes are host-registered. A host may supply a resolver (its
-    # anchors may live in another database); otherwise the gem's own table is
-    # used. An unregistered scope fails closed rather than querying blindly.
-    def resolve_anchor(target, strict: true)
-      scopes = Jazari.config.anchor_scopes
-      unless scopes.key?(target.scope_type)
-        raise TargetNotFound, "anchor scope #{target.scope_type.inspect} is not registered"
-      end
-
-      resolver = scopes[target.scope_type]
-      subject = if resolver.respond_to?(:call)
-        resolver.call(target)
-      else
-        Anchor.find_by(scope_type: target.scope_type, scope_id: target.scope_id, key: target.key)
-      end
-
-      # Fail closed. A nil result would otherwise silently become a
-      # subject-less (queue-shaped) run, and a non-record would produce
-      # invalid polymorphic data or blow up on `.id`.
-      unless subject.is_a?(ActiveRecord::Base) && subject.persisted?
-        return nil unless strict
-
-        raise TargetNotFound, "anchor #{target.key.inspect} did not resolve to a persisted record"
-      end
-
-      subject
-    end
-    private_class_method :resolve_anchor
 
     def stored(value) = Array(value).map { |h| h.to_h.transform_keys(&:to_s) }
     private_class_method :stored
