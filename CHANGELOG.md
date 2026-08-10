@@ -1,5 +1,13 @@
 # Changelog
 
+All notable changes are recorded here. The release workflow REFUSES to publish
+a version with no entry — see RELEASING.md.
+
+Pre-1.0: minor versions may break. The public contract includes the error
+codes, the resolved-value shape, how revisions are computed, and the schema the
+generator emits — changes to any of those are breaking even when the method
+signatures do not move.
+
 ## [Unreleased]
 
 Initial implementation. Not yet released to RubyGems.
@@ -13,3 +21,18 @@ Initial implementation. Not yet released to RubyGems.
 - `Jazari::Mcp::Handler` — transport-neutral action dispatch; host owns tool identity.
 - `rails g jazari:install` — host-adopted migration; the gem never auto-appends.
 - PostgreSQL only. The suite runs the migration the gem ships.
+- `Jazari.forget_subject` — host-called cleanup; runs deliberately survive.
+- Railtie so models autoload in a host (the gem was unusable without it).
+- Per-table name overrides, for hosts adopting tables they already have.
+
+### Found by the first host adoption
+
+Five defects that no amount of unit testing had surfaced, each now
+regression-tested — every one a place the gem assumed it owned something the
+host actually owns:
+
+- models never autoloaded in a real application
+- read and write paths resolved anchors differently
+- host resolvers were not told whether they may create, so reads wrote
+- `reset` assumed the gem's own anchor class and left host-owned orphans
+- the recipe registry could disagree with itself across a shim boundary

@@ -1,0 +1,84 @@
+name: Release to RubyGems
+
+# Triggered by pushing a version tag (e.g. v0.1.0). Verifies the tag matches
+# Jazari::VERSION, runs the full gate, builds the gem, and pushes it.
+#
+# Required repo secret: RUBYGEMS_API_KEY
+#   Create a token at https://rubygems.org/profile/api_keys with the
+#   "push rubygem" scope, then:
+#     gh secret set RUBYGEMS_API_KEY --body "rubygems_xxx" -R nauman/jazari
+#
+# To cut a release, follow RELEASING.md — do not gem push by hand.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: Build + publish ${{ github.ref_name }}
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jazari_test
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      JAZARI_TEST_DATABASE: jazari_test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Verify the tag matches Jazari::VERSION
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          gem_version=$(ruby -e 'require_relative "lib/jazari/version"; puts Jazari::VERSION')
+          if [ "$tag" != "$gem_version" ]; then
+            echo "::error::Tag ($tag) does not match Jazari::VERSION ($gem_version)"
+            exit 1
+          fi
+          echo "Tag $tag matches Jazari::VERSION $gem_version ✓"
+
+      - name: Verify the CHANGELOG mentions this version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          if ! grep -q "\[$tag\]\|## $tag" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no entry for $tag — a release nobody can read is not a release"
+            exit 1
+          fi
+          echo "CHANGELOG entry for $tag found ✓"
+
+      # boundary + tests. The boundary check matters MOST here: publishing is
+      # the one irreversible moment, and it is what stops a host product name
+      # leaving in a package.
+      - name: Gate (boundary + suite)
+        run: bundle exec rake
+
+      - name: Build gem
+        run: bundle exec rake build
+
+      - name: Push to RubyGems
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: |
+          if [ -z "$GEM_HOST_API_KEY" ]; then
+            echo "::error::RUBYGEMS_API_KEY secret is not set"
+            exit 1
+          fi
+          gem push pkg/jazari-*.gem
