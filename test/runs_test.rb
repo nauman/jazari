@@ -223,6 +223,21 @@ class RunsReviewRegressionsTest < Minitest::Test
     end
   end
 
+  def test_a_run_opens_against_the_subject_customization
+    subject = DummySubject.create!(name: "custom")
+    target = Jazari::RecordTarget.new(runbookable: subject, public_reference: { kind: "dummy" }, recipe_id: "adhoc.v1")
+    resolved = Jazari.resolve(target: target)
+    Jazari.customize(target: target, expected_revision: resolved.revision,
+                     topic: "Custom", description: "custom",
+                     checklist: [ { id: "custom-step", text: "Custom step", done: false } ])
+
+    run = Jazari::Runs.open(target: target, actor_ref: "user:1")[:run]
+
+    assert_equal [ "custom-step" ], run.checklist_snapshot.map { |item| item["id"] }
+    Jazari::Runs.tick(run: run, expected_revision: run.lock_version,
+                      item_id: "custom-step", done: true, actor_ref: "user:1")
+  end
+
   # Finding 2 — a unique violation we do not own must not be read as reuse.
   def test_a_foreign_unique_violation_is_not_swallowed_for_an_unrestricted_recipe
     Jazari::Run.connection.execute("CREATE UNIQUE INDEX host_actor_idx ON jazari_runs (actor_ref)")

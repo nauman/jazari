@@ -8,6 +8,13 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.5.2] - 2026-08-12
+
+### Fixed
+
+- Runs opened for a customized subject now snapshot that subject's resolved
+  checklist, preserving custom item ids for ticks and evidence.
+
 ## [0.5.1] - 2026-08-12
 
 ### Changed

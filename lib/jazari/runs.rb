@@ -20,6 +20,7 @@ module Jazari
     # the revision guard exists to prevent.
     def open(target:, actor_ref: nil, now: Time.now.utc)
       recipe = RecipeRegistry.fetch(target.recipe_id)
+      resolved = Operations.resolve(target: target)
       subject = subject_for(target)
       started_at = now.utc
       actor_ref = resolve_actor_ref(actor_ref)
@@ -39,7 +40,10 @@ module Jazari
         # operator editing a recipe mid-run makes the in-flight run unable to
         # tick its own steps, and able to tick steps that did not exist when it
         # started. source_digest alone is provenance, not protection.
-        checklist_snapshot: recipe.checklist.map { |i| i.transform_keys(&:to_s) },
+        # A subject may carry a deliberate runbook customization. The run must
+        # snapshot the truth the caller resolved, not silently fall back to the
+        # recipe and then reject the subject's own checklist item at tick time.
+        checklist_snapshot: resolved.checklist.map { |i| i.transform_keys(&:to_s) },
         ticks: [], evidence: []
       }
 
