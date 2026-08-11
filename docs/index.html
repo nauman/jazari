@@ -215,8 +215,9 @@ footer a{color:var(--gold)}
     <h1 class="kin" style="margin-top:14px">Procedures you can call.</h1>
     <p class="lede" style="margin-top:22px">
       Not documents you hope someone reads. Recipes as data, per-subject runbooks,
-      stable names for rituals that outlive any record, and per-run evidence — so
-      <em>“did last night’s run actually complete?”</em> is a query.
+      stable names for rituals that outlive any record, and per-run evidence — including
+      <strong>who or what acted</strong> — so <em>“did last night’s run actually complete?”</em>
+      is a query.
     </p>
     <div class="cta">
       <a class="btn p" href="https://rubygems.org/gems/jazari">gem install jazari</a>
@@ -229,6 +230,13 @@ footer a{color:var(--gold)}
       <div class="stat"><b data-count="4">0</b><span>tables</span></div>
       <div class="stat"><b data-count="83">0</b><span>tests</span></div>
       <div class="stat"><b data-count="2">0</b><span>dependencies</span></div>
+    </div>
+
+    <div class="note rv" style="max-width:74ch;margin-top:34px">
+      <p><strong>State tells you what is done.</strong> Jazari runs also record the opaque
+      <span class="mono">actor_ref</span> — a human, agent, or system job — and attach that
+      identity to the evidence. Explicit actors win; trusted defaults and run inheritance keep
+      automated procedures simple without losing attribution.</p>
     </div>
   </div>
 </header>

@@ -8,6 +8,14 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.5.1] - 2026-08-12
+
+### Changed
+
+- Promoted actor identity into the landing-page introduction so the public
+  value proposition explains that runs record who or what acted, not only
+  whether a checklist item is complete.
+
 ## [0.5.0] - 2026-08-12
 
 ### Added
