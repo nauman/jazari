@@ -103,9 +103,10 @@ module Jazari
 
     def resolve(target:) = Operations.resolve(target: target)
 
-    def customize(target:, expected_revision:, topic:, description:, checklist:)
+    def customize(target:, expected_revision:, topic:, description:, checklist:, origin: nil)
       Operations.customize(target: target, expected_revision: expected_revision,
-                           topic: topic, description: description, checklist: checklist)
+                           topic: topic, description: description, checklist: checklist,
+                           origin: origin)
     end
 
     def add_item(target:, expected_revision:, text:, required: true)

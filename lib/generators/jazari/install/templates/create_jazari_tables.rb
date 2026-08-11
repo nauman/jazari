@@ -31,6 +31,12 @@ class CreateJazariTables < ActiveRecord::Migration[7.1]
       t.string  :topic, null: false
       t.text    :description, null: false, default: ""
       t.jsonb   :checklist, null: false, default: []
+      # Provenance, host-defined and nullable. A runbook that exists because a
+      # backfill created it is a migration artifact; one that exists because an
+      # operator edited it is a decision. Both differ from the canon, so
+      # comparing content cannot tell them apart — only provenance can, and NULL
+      # honestly means "we did not record why".
+      t.string  :origin
       t.integer :lock_version, null: false, default: 0
       t.timestamps
       t.index %i[runbookable_type runbookable_id], unique: true

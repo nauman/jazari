@@ -21,6 +21,7 @@ class OperationsTest < Minitest::Test
 
   def target = Jazari::RecordTarget.new(runbookable: @subject, public_reference: { kind: "dummy" }, recipe_id: "canon.v1")
   def queue  = Jazari::QueueTarget.new(queue: "ritual", public_reference: { kind: "queue" }, recipe_id: "canon.v1")
+  def default_revision = Jazari.resolve(target: target).revision
   def anchor_target
     Jazari::AnchorTarget.new(scope_type: "Tree", scope_id: 7, key: "node-x",
                              public_reference: { kind: "node" }, recipe_id: "canon.v1")
@@ -199,6 +200,69 @@ class OperationsTest < Minitest::Test
     d = Jazari.remove_item(target: target, expected_revision: k.revision,
                            item_id: k.checklist.last[:id])
     assert Jazari.reset(target: target, expected_revision: d.revision).default?
+  end
+  # --- provenance: why a runbook exists, not just that it does ----------
+
+  # `custom?` answers "does a row exist". After a backfill that is true of every
+  # subject at once, so a host reading it as divergence sees 100% divergence the
+  # morning after a migration and learns nothing. Content comparison does not
+  # separate them either — a backfilled runbook genuinely differs, because it
+  # carries the steps the subject actually had.
+
+  def test_a_default_runbook_has_no_origin
+    assert_nil Jazari.resolve(target: target).origin
+    refute Jazari.resolve(target: target).diverged?
+  end
+
+  def test_an_operator_edit_diverges_and_claims_no_origin
+    resolved = Jazari.customize(target: target, expected_revision: default_revision,
+                                topic: "Mine", description: "d", checklist: [])
+
+    assert_nil resolved.origin
+    assert resolved.diverged?
+    refute resolved.inherited?
+  end
+
+  def test_a_host_backfill_marks_the_row_inherited_rather_than_diverged
+    resolved = Jazari.customize(target: target, expected_revision: default_revision,
+                                topic: "Carried over", description: "d", checklist: [],
+                                origin: "migration")
+
+    assert_equal "migration", resolved.origin
+    assert resolved.inherited?
+    refute resolved.diverged?, "a migration artifact is not a decision someone made"
+  end
+
+  def test_origin_survives_a_reread
+    Jazari.customize(target: target, expected_revision: default_revision,
+                     topic: "Carried over", description: "d", checklist: [], origin: "migration")
+
+    assert_equal "migration", Jazari.resolve(target: target).origin
+  end
+
+  # The self-healing property: the marker is a claim about how the row came to
+  # exist, and an operator editing it makes that claim false.
+  def test_an_operator_edit_clears_an_inherited_marker
+    first = Jazari.customize(target: target, expected_revision: default_revision,
+                             topic: "Carried over", description: "d", checklist: [],
+                             origin: "migration")
+    second = Jazari.customize(target: target, expected_revision: first.revision,
+                              topic: "Now mine", description: "d", checklist: [])
+
+    assert_nil second.origin
+    assert second.diverged?, "once someone edits it, the divergence is theirs"
+  end
+
+  def test_ticking_an_item_is_not_an_edit_that_forfeits_provenance
+    first = Jazari.customize(target: target, expected_revision: default_revision,
+                             topic: "Carried over", description: "d",
+                             checklist: [ { id: "a", text: "step", done: false } ],
+                             origin: "migration")
+    ticked = Jazari.check_item(target: target, expected_revision: first.revision,
+                               item_id: "a", done: true)
+
+    assert_equal "migration", ticked.origin,
+                 "doing the procedure is not rewriting it"
   end
 end
 
@@ -453,4 +517,5 @@ class LazyTableNameTest < Minitest::Test
     Jazari.configure { |c| c.table_prefix = "jazari_"; c.table_names = original || {} }
     assert_equal "jazari_runs", Jazari::Run.table_name
   end
+
 end

@@ -8,6 +8,50 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.3.0] - 2026-08-11
+
+### Added
+
+- **`origin` on the runbook — provenance, so divergence means something.**
+  `custom?` answers "does a row exist", which a host adopting jazari cannot use
+  as a divergence signal: a backfill materializes a row for every subject at
+  once, so the morning after a migration everything reads as diverged and the
+  signal carries no information. Comparing content against the recipe does not
+  separate them either — a backfilled runbook *genuinely* differs, because it
+  carries the steps that subject actually had. Only provenance can.
+
+  `origin` is a nullable, host-defined string saying **why the row exists**.
+  `ResolvedRunbook` gains `#origin`, plus `#inherited?` (a row something claims
+  to have manufactured) and `#diverged?` (a row nobody claims, i.e. someone
+  decided it). `Jazari.customize` takes an optional `origin:`.
+
+  Two behaviours make the marker honest rather than decorative:
+
+  - **`customize` restates it, defaulting to nil.** Rewriting a procedure is a
+    decision, so an operator edit clears an inherited marker — the claim about
+    how the row came to exist stops being true the moment someone edits it.
+  - **Item operations preserve it.** `check_item`, `add_item` and `remove_item`
+    leave `origin` untouched, because performing a procedure is not rewriting
+    it. Without this, the first person to tick a box would silently convert a
+    migration artifact into a deliberate divergence.
+
+  Raised by a host adoption, where the backfill would otherwise have made six
+  of six subjects read as diverged on day one.
+
+### Changed
+
+- **`ResolvedRunbook` carries a new member (`origin`).** Positional
+  construction and exhaustive destructuring break; keyword construction and
+  member access do not. It defaults to nil, so hosts that ignore it are
+  unaffected.
+
+### Migration
+
+Already installed? `rails g jazari:upgrade` copies the one additive, nullable
+column. It is safe to run ahead of any code that writes it — NULL is truthful
+for every existing row, meaning "this predates provenance". New installs get
+the column from `jazari:install`.
+
 ## [0.2.1] - 2026-08-10
 
 ### Fixed

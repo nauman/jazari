@@ -23,11 +23,14 @@ module Jazari
       default_value(recipe, target, last)
     end
 
-    def customize(target:, expected_revision:, topic:, description:, checklist:)
+    # `origin` records WHY this row exists, for hosts that materialize runbooks
+    # themselves — a backfill, an import, a template. Leave it nil for an operator
+    # edit, which is the default because that is the ordinary case.
+    def customize(target:, expected_revision:, topic:, description:, checklist:, origin: nil)
       writable!(target)
       validate_document!(topic, description)
       items = Checklist.normalize(checklist)
-      write(target, expected_revision) do |current|
+      write(target, expected_revision, origin: origin) do |current|
         current.merge(topic: topic, description: description, checklist: items)
       end
     end
@@ -112,25 +115,35 @@ module Jazari
     end
     private_class_method :writable!
 
-    def write(target, expected_revision)
+    # `origin` distinguishes REWRITING the procedure from PERFORMING it, so the
+    # sentinel is not cosmetic. Rewriting it (customize) restates why the row
+    # exists, and passing nil there is an operator claiming it as their own.
+    # Ticking an item is doing the work the row already describes, and must
+    # leave that claim alone — otherwise the first person to check a box
+    # silently converts a migration artifact into a deliberate divergence.
+    KEEP_ORIGIN = :keep
+
+    def write(target, expected_revision, origin: KEEP_ORIGIN)
       record = find_runbook(target)
       if record
         record.with_lock do
           verify_custom_revision!(record, expected_revision)
           document = yield(current_document(record))
-          record.update!(
+          attributes = {
             topic: document[:topic], description: document[:description],
             checklist: store_items(document[:checklist])
-          )
+          }
+          attributes[:origin] = origin unless origin == KEEP_ORIGIN
+          record.update!(attributes)
         end
       else
-        create_custom(target, expected_revision) { |current| yield(current) }
+        create_custom(target, expected_revision, origin: origin) { |current| yield(current) }
       end
       resolve(target: target)
     end
     private_class_method :write
 
-    def create_custom(target, expected_revision)
+    def create_custom(target, expected_revision, origin: KEEP_ORIGIN)
       verify_default_revision!(target, expected_revision)
       recipe = RecipeRegistry.fetch(target.recipe_id)
       document = yield(
@@ -141,7 +154,9 @@ module Jazari
         runbookable: runbookable_for(target),
         recipe_id: recipe.id,
         topic: document[:topic], description: document[:description],
-        checklist: store_items(document[:checklist])
+        checklist: store_items(document[:checklist]),
+        # A brand-new row has no prior claim to keep, so the sentinel means nil.
+        origin: (origin == KEEP_ORIGIN ? nil : origin)
       )
     rescue ActiveRecord::RecordNotUnique
       raise RevisionConflict, "another writer materialized this runbook first"
@@ -219,7 +234,7 @@ module Jazari
         state: "custom", revision: record.lock_version, topic: record.topic,
         description: record.description, checklist: stored_items(record.checklist),
         target_reference: target.public_reference, recipe: recipe.provenance,
-        last_run: run_summary(last)
+        last_run: run_summary(last), origin: record.origin
       )
     end
     private_class_method :custom_value
