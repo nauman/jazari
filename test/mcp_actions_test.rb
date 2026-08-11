@@ -28,6 +28,7 @@ class McpActionsTest < Minitest::Test
     assert_includes frag[:enum], "start"
     assert_includes frag[:properties].keys, :expected_revision
     assert_equal "string", frag[:properties][:expected_revision][:type]
+    assert_equal "string", frag[:properties][:actor_ref][:type]
 
     # A host merges these into its own tool without adopting our handler.
     host_tool = { properties: { action: { enum: %w[my_existing_action] } } }

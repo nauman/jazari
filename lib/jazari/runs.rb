@@ -18,10 +18,11 @@ module Jazari
     # Insert FIRST, then rescue the unique violation and select the winner.
     # A find-then-insert races under concurrent writers — the same defect class
     # the revision guard exists to prevent.
-    def open(target:, actor_ref:, now: Time.now.utc)
+    def open(target:, actor_ref: nil, now: Time.now.utc)
       recipe = RecipeRegistry.fetch(target.recipe_id)
       subject = subject_for(target)
       started_at = now.utc
+      actor_ref = resolve_actor_ref(actor_ref)
 
       attributes = {
         recipe_id: recipe.id,
@@ -67,7 +68,7 @@ module Jazari
       end
     end
 
-    def tick(run:, expected_revision:, item_id:, done:, actor_ref:, note: nil, now: Time.now.utc)
+    def tick(run:, expected_revision:, item_id:, done:, actor_ref: nil, note: nil, now: Time.now.utc)
       mutate(run, expected_revision) do |record|
         raise RunClosed, "run #{record.id} is already closed" if record.closed?
 
@@ -84,12 +85,14 @@ module Jazari
 
         ticks = stored(record.ticks).reject { |t| t["id"] == item_id.to_s }
         ticks << { "id" => item_id.to_s, "done" => done == true, "at" => now.utc.iso8601,
-                   "actor_ref" => actor_ref.to_s, "note" => note&.to_s }
+                   "actor_ref" => resolve_actor_ref(actor_ref, fallback: record.actor_ref),
+                   "note" => note&.to_s }
         record.ticks = ticks
       end
     end
 
-    def attach_evidence(run:, expected_revision:, item_id:, kind:, value:, now: Time.now.utc)
+    def attach_evidence(run:, expected_revision:, item_id:, kind:, value:, actor_ref: nil,
+                        now: Time.now.utc)
       raise InvalidRunbook, "unknown evidence kind #{kind.inspect}" unless EVIDENCE_KINDS.include?(kind.to_s)
 
       mutate(run, expected_revision) do |record|
@@ -97,7 +100,8 @@ module Jazari
 
         record.evidence = stored(record.evidence) + [
           { "item_id" => item_id&.to_s, "kind" => kind.to_s,
-            "value" => value.to_s[0, MAX_EVIDENCE], "at" => now.utc.iso8601 }
+            "value" => value.to_s[0, MAX_EVIDENCE], "at" => now.utc.iso8601,
+            "actor_ref" => resolve_actor_ref(actor_ref, fallback: record.actor_ref) }
         ]
       end
     end
@@ -175,5 +179,15 @@ module Jazari
 
     def stored(value) = Array(value).map { |h| h.to_h.transform_keys(&:to_s) }
     private_class_method :stored
+
+    def resolve_actor_ref(explicit, fallback: nil)
+      value = explicit || fallback || Jazari.config.actor_ref
+      value = value.call if value.respond_to?(:call)
+      value = value.to_s
+      raise InvalidRunbook, "actor_ref is required" if value.empty?
+
+      value
+    end
+    private_class_method :resolve_actor_ref
   end
 end

@@ -19,6 +19,7 @@ class McpHandlerTest < Minitest::Test
     ])
     @handler = Jazari::Mcp::Handler.new
     @subject = DummySubject.create!(name: "one")
+    Jazari.configure { |c| c.actor_ref = nil }
   end
 
   def target = Jazari::RecordTarget.new(runbookable: @subject, public_reference: { kind: "dummy" }, recipe_id: "canon.v1")
@@ -83,9 +84,10 @@ class McpHandlerTest < Minitest::Test
 
     evidenced = @handler.call(action: "evidence", target: queue, arguments: {
       run_id: ticked[:run_id], expected_revision: ticked[:revision],
-      item_id: "a", kind: "count", value: "4211"
+      item_id: "a", kind: "count", value: "4211", actor_ref: "agent:1"
     })
     assert_equal "4211", evidenced[:evidence].first["value"]
+    assert_equal "agent:1", evidenced[:evidence].first["actor_ref"]
 
     finished = @handler.call(action: "finish", target: queue, arguments: {
       run_id: evidenced[:run_id], expected_revision: evidenced[:revision], outcome: "completed"

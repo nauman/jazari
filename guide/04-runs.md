@@ -14,7 +14,8 @@ Jazari.tick(run: run, expected_revision: run.lock_version,
             item_id: "restore", done: true, actor_ref: "agent:nightly")
 
 Jazari.attach_evidence(run: run.reload, expected_revision: run.lock_version,
-                       item_id: "counts", kind: "count", value: "4211 rows")
+                       item_id: "counts", kind: "count", value: "4211 rows",
+                       actor_ref: "agent:nightly")
 
 Jazari.close_run(run: run.reload, expected_revision: run.lock_version,
                  outcome: "completed")
@@ -72,7 +73,7 @@ Without this, improving a procedure silently breaks every run in progress.
 
 ```ruby
 Jazari.attach_evidence(run:, expected_revision:, item_id:,
-                       kind: "count", value: "4211 rows")
+                       kind: "count", value: "4211 rows", actor_ref: "agent:nightly")
 ```
 
 Kinds are bounded — `output`, `url`, `sha`, `count`, `note` — deliberately.
@@ -81,6 +82,14 @@ answer to "you say you verified it; show me."
 
 If a procedure of yours currently says *"keep a timestamped record of command
 results and object ids"*, that sentence is asking for this table.
+
+### Actor defaults and inheritance
+
+Actor identity is opaque and belongs to the execution, not the recipe. Pass a
+different `actor_ref` when a different human, agent, or job acts. A configured
+zero-argument `c.actor_ref` may supply a trusted system default when opening a
+run. Explicit references win, while omitted ticks and evidence inherit the run's
+actor. This keeps retries convenient without making the audit trail anonymous.
 
 ## Runs outlive their subjects
 

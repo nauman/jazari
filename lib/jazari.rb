@@ -44,13 +44,19 @@ module Jazari
       # renaming live tables in the same deploy as a cut-over is exactly what
       # the adoption plan forbids. Any key omitted falls back to the prefix.
       self.table_names   ||= {}
-      self.actor_ref     ||= ->(actor) { "actor:#{actor.object_id}" }
+      # Optional zero-argument provider for trusted system contexts. User and
+      # agent callers should pass an explicit opaque actor_ref.
+      self.actor_ref     = nil if actor_ref.nil?
     end
 
     # Fail at boot, not at first call.
     def validate!
       anchor_scopes.each_key do |scope|
         raise ArgumentError, "anchor scope #{scope.inspect} must be a String" unless scope.is_a?(String)
+      end
+      if actor_ref && !actor_ref.is_a?(String) &&
+          !(actor_ref.respond_to?(:call) && actor_ref.respond_to?(:arity) && actor_ref.arity.zero?)
+        raise ArgumentError, "actor_ref must be a String or zero-argument callable"
       end
       true
     end
@@ -82,18 +88,18 @@ module Jazari
   # The documented public interface (spec 02 section 3). `Runs` is the
   # implementation; these are the names hosts and the MCP handler call.
   class << self
-    def open_run(target:, actor_ref:, now: Time.now.utc)
+    def open_run(target:, actor_ref: nil, now: Time.now.utc)
       Runs.open(target: target, actor_ref: actor_ref, now: now)
     end
 
-    def tick(run:, expected_revision:, item_id:, done:, actor_ref:, note: nil)
+    def tick(run:, expected_revision:, item_id:, done:, actor_ref: nil, note: nil)
       Runs.tick(run: run, expected_revision: expected_revision, item_id: item_id,
                 done: done, actor_ref: actor_ref, note: note)
     end
 
-    def attach_evidence(run:, expected_revision:, item_id:, kind:, value:)
+    def attach_evidence(run:, expected_revision:, item_id:, kind:, value:, actor_ref: nil)
       Runs.attach_evidence(run: run, expected_revision: expected_revision,
-                           item_id: item_id, kind: kind, value: value)
+                           item_id: item_id, kind: kind, value: value, actor_ref: actor_ref)
     end
 
     def close_run(run:, expected_revision:, outcome:)

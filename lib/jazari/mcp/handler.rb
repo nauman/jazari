@@ -86,13 +86,14 @@ module Jazari
       def handle_tick(_target, args)
         run = Runs.tick(run: args.fetch(:run_id), expected_revision: args[:expected_revision],
                         item_id: args[:item_id], done: args.fetch(:done, true),
-                        actor_ref: args.fetch(:actor_ref), note: args[:note])
+                        actor_ref: args[:actor_ref], note: args[:note])
         run_view(run)
       end
 
       def handle_evidence(_target, args)
         run = Runs.attach_evidence(run: args.fetch(:run_id), expected_revision: args[:expected_revision],
-                                   item_id: args[:item_id], kind: args.fetch(:kind), value: args.fetch(:value))
+                                   item_id: args[:item_id], kind: args.fetch(:kind),
+                                   value: args.fetch(:value), actor_ref: args[:actor_ref])
         run_view(run)
       end
 

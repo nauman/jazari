@@ -20,7 +20,7 @@ partial unique index over a `COALESCE`d polymorphic subject.
 
 ```ruby
 Jazari.configure do |c|
-  c.actor_ref            = ->(actor) { "user:#{actor.id}" }
+  c.actor_ref            = -> { "system:nightly-backup" } # trusted default only
   c.anchor_scopes        = { "Tree" => resolver }      # see guide 03
   c.on_subject_destroyed = ->(subject) { }             # optional hook
 end
@@ -28,6 +28,10 @@ end
 
 `configure` validates and returns; a scope it cannot understand fails at boot
 rather than at the first call.
+
+Pass explicit actor references for human, agent, or delegated work. They always
+override the configured default. Ticks and evidence inherit the run actor when
+omitted; opening a run without an actor requires the configured default.
 
 ## Adopting onto tables you already have
 

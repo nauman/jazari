@@ -8,6 +8,27 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.5.0] - 2026-08-12
+
+### Added
+
+- **Execution-scoped actor identity.** Runs now require an opaque `actor_ref`,
+  with explicit values taking precedence over a configured trusted-system
+  default. Ticks and evidence inherit the run actor unless explicitly
+  attributed otherwise.
+- Evidence records now retain `actor_ref`, making it possible to answer who or
+  what performed each procedure step without giving Jazari access to actor
+  objects.
+- MCP evidence declarations and public examples now expose the actor contract.
+- Public guides and the landing page now document actor attribution and
+  RecipeFiles load, seed, dump, and drift workflows.
+
+### Compatibility
+
+- Existing explicit `actor_ref` calls continue to work unchanged.
+- MCP run start continues to require an explicit actor identity; subsequent
+  tick and evidence calls may inherit the actor from the open run.
+
 ## [0.4.0] - 2026-08-11
 
 ### Added

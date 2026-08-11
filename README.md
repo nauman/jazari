@@ -12,7 +12,8 @@ Requires Ruby 3.2+, Rails 7.1+, and PostgreSQL.
 
 ## Guides
 
-The README is the pitch; the [guides](guide/) are the working documents —
+The README is the pitch; the public [Kuickr guide](https://kuickr.co/jazari/guide)
+is the operating manual. Its source lives in [`guide/`](guide/), including
 [concepts](guide/01-concepts.md) (start here: one word means something
 different than you expect), [adoption](guide/02-adoption.md),
 [anchors](guide/03-anchors.md), [runs and evidence](guide/04-runs.md),
@@ -96,7 +97,8 @@ Jazari.tick(run: run, expected_revision: run.lock_version,
             item_id: "restore", done: true, actor_ref: "agent:nightly")
 
 Jazari.attach_evidence(run: run.reload, expected_revision: run.lock_version,
-                       item_id: "counts", kind: "count", value: "4211 rows")
+                       item_id: "counts", kind: "count", value: "4211 rows",
+                       actor_ref: "agent:nightly")
 
 Jazari.close_run(run: run.reload, expected_revision: run.lock_version,
                  outcome: "completed")
@@ -156,12 +158,44 @@ operator-owned. Reseeding never overwrites an edit.
 That means fixing a ritual is a **write, not a deploy** — and a fresh install
 can ship with working procedures instead of an empty text box.
 
+For version-controlled recipes, load YAML or JSON as a seed and report drift
+without overwriting operator edits:
+
+```ruby
+entries = Jazari::RecipeFiles.load("config/recipes")
+Jazari::RecipeRegistry.seed!(entries)
+Jazari::RecipeFiles.drift(entries)
+```
+
 ## Runs are bound to the canon they opened against
 
 A run snapshots its checklist when it opens. Edit the recipe mid-run and the
 in-flight run still ticks its own steps, and refuses steps that did not exist
 when it started. Without this, an operator improving a procedure silently breaks
 every run in progress.
+
+## Actor identity is part of the evidence
+
+Jazari stores the opaque identity attached to the run, every tick, and every
+evidence entry. Pass a stable reference when a human, agent, or job acts:
+
+```ruby
+Jazari.open_run(target: target, actor_ref: "user:42")
+Jazari.tick(run: run, expected_revision: run.lock_version,
+            item_id: "restore", done: true, actor_ref: "user:42")
+Jazari.attach_evidence(run: run.reload, expected_revision: run.lock_version,
+                       item_id: "restore", kind: "note", value: "verified",
+                       actor_ref: "user:42")
+```
+
+For trusted system jobs, configure a zero-argument default. Explicit references
+always win. When a tick or evidence entry omits its actor, it inherits the run's
+actor; opening a run without an explicit actor requires this configured default.
+
+```ruby
+Jazari.configure { |c| c.actor_ref = -> { "system:nightly-backup" } }
+Jazari.open_run(target: target)
+```
 
 ## MCP
 
@@ -183,10 +217,11 @@ could disclose a record or whether a target exists.
 `Handler.actions_for("read")` returns the read-only subset, so a read-scoped
 connection never advertises mutations.
 
-## You authorize; Jazari never sees an actor
+## You authorize; Jazari never sees an actor object
 
-The domain accepts no raw IDs, no arbitrary records, and no actor. Your app
-authorizes first, then constructs exactly one immutable target:
+The domain accepts no raw IDs, arbitrary records, or actor objects. Your app
+authorizes first, then constructs exactly one immutable target. It passes only an
+opaque `actor_ref` string for audit history:
 
 ```ruby
 Jazari::RecordTarget.new(runbookable: site, public_reference: { kind: "site" },

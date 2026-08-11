@@ -14,6 +14,7 @@ class RunsTest < Minitest::Test
       { id: "adhoc.v1", topic: "Ad-hoc ritual", run_policy: "unrestricted",
         checklist: [ { id: "step-a", text: "Do it", done: false } ] }
     ])
+    Jazari.configure { |c| c.actor_ref = nil }
   end
 
   def queue(recipe_id)
@@ -55,6 +56,22 @@ class RunsTest < Minitest::Test
   def test_unrestricted_recipes_open_every_time
     3.times { |i| Jazari::Runs.open(target: queue("adhoc.v1"), actor_ref: "a", now: Time.utc(2026, 8, 10, i + 1)) }
     assert_equal 3, Jazari::Run.count
+  end
+
+  def test_a_configured_actor_default_is_used_when_opening_a_run
+    Jazari.configure { |c| c.actor_ref = -> { "system:nightly" } }
+
+    run = Jazari::Runs.open(target: queue("adhoc.v1"))[:run]
+
+    assert_equal "system:nightly", run.actor_ref
+  end
+
+  def test_an_explicit_actor_ref_overrides_the_configured_default
+    Jazari.configure { |c| c.actor_ref = -> { "system:nightly" } }
+
+    run = Jazari::Runs.open(target: queue("adhoc.v1"), actor_ref: "user:42")[:run]
+
+    assert_equal "user:42", run.actor_ref
   end
 
   def test_distinct_subjects_do_not_collide_on_the_same_day
@@ -108,6 +125,31 @@ class RunsTest < Minitest::Test
       Jazari::Runs.attach_evidence(run: run, expected_revision: run.lock_version,
                                    item_id: "step-a", kind: "whatever", value: "x")
     end
+  end
+
+  def test_tick_and_evidence_inherit_the_run_actor_when_omitted
+    run = Jazari::Runs.open(target: queue("adhoc.v1"), actor_ref: "agent:runner")[:run]
+
+    ticked = Jazari::Runs.tick(run: run, expected_revision: run.lock_version,
+                               item_id: "step-a", done: true)
+    evidenced = Jazari::Runs.attach_evidence(
+      run: ticked, expected_revision: ticked.lock_version,
+      item_id: "step-a", kind: "note", value: "verified"
+    )
+
+    assert_equal "agent:runner", evidenced.ticks.first["actor_ref"]
+    assert_equal "agent:runner", evidenced.evidence.first["actor_ref"]
+  end
+
+  def test_evidence_accepts_an_explicit_actor_ref
+    run = Jazari::Runs.open(target: queue("adhoc.v1"), actor_ref: "agent:runner")[:run]
+
+    evidenced = Jazari::Runs.attach_evidence(
+      run: run, expected_revision: run.lock_version,
+      item_id: "step-a", kind: "note", value: "reviewed", actor_ref: "user:42"
+    )
+
+    assert_equal "user:42", evidenced.evidence.first["actor_ref"]
   end
 
   def test_last_answers_did_it_complete

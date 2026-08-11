@@ -82,9 +82,9 @@ Queues are **read-only** — a ritual has exactly one editable home, its recipe.
 Without this, a checklist is a mutable singleton: you `reset` it to run again,
 and in doing so destroy the only evidence it ever ran.
 
-A run carries its own ticks, its own actor, a start and an end, and somewhere to
-attach what you actually saw. The template stays clean; the history stops being
-destroyed by the act of starting over.
+A run carries its own actor, ticks, a start and an end, and somewhere to attach
+what you actually saw. Each tick and evidence entry records its actor too, so the
+history stops being destroyed by the act of starting over.
 
 A run also **snapshots its checklist when it opens**, so editing a recipe
 mid-run does not break runs in flight.
@@ -99,10 +99,11 @@ most when several automated writers share one procedure.
 happen once a day; triaging an incident may happen five times. Each recipe
 declares its own `run_policy`.
 
-**You authorize; jazari never sees an actor.** The domain accepts no raw IDs, no
-arbitrary records, and no actor. You authorize first, then hand it exactly one
-immutable target. Unknown, unauthorized, and deleted targets all collapse to the
-same `target_not_found`, so guessing cannot reveal what exists.
+**You authorize; jazari never sees an actor object.** The domain accepts no raw
+IDs or arbitrary records. You authorize first, then hand it exactly one immutable
+target and an opaque `actor_ref` for audit history. Unknown, unauthorized, and
+deleted targets all collapse to the same `target_not_found`, so guessing cannot
+reveal what exists.
 
 ## What it is not
 

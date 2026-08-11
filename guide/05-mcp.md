@@ -65,8 +65,10 @@ Tool identity is product identity. Your tool has your name, your subject
 vocabulary, and your permissions — `myapp_runbook`, not `jazari_runbook`. Two
 apps sharing this handler still present two different tools.
 
-The handler also never sees an actor. **You authorize, then construct the
-target**, then call. That ordering is the whole security model.
+The handler never sees an actor object. **You authorize, construct the target,
+and pass an opaque `actor_ref`**, then call. That ordering is the whole security
+model. Evidence may carry a different explicit `actor_ref`; if omitted, it
+inherits the run actor.
 
 ```ruby
 def call(input)

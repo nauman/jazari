@@ -411,7 +411,12 @@ footer a{color:var(--gold)}
       { id: <span class="s">"counts"</span>,  text: <span class="s">"Compare table and row counts"</span> }
     ] }
 ])
-<span class="cm"># seed! is create-if-missing — reseeding never overwrites an operator edit.</span></pre></div>
+<span class="cm"># seed! is create-if-missing — reseeding never overwrites an operator edit.</span>
+
+<span class="cm"># YAML/JSON files are seeds; drift is reported, never overwritten.</span>
+entries = <b>Jazari::RecipeFiles</b>.load(<span class="s">"config/recipes"</span>)
+<b>Jazari::RecipeRegistry</b>.seed!(entries)
+<b>Jazari::RecipeFiles</b>.drift(entries)</pre></div>
 
       <div class="pane" id="p2"><pre><span class="cm"># A queue: a stable name for a ritual that belongs to no record.</span>
 target = <b>Jazari::QueueTarget</b>.new(
@@ -435,7 +440,8 @@ run    = result[:run]
             item_id: <span class="s">"restore"</span>, done: <span class="k">true</span>, actor_ref: <span class="s">"agent:nightly"</span>)
 
 <b>Jazari</b>.attach_evidence(run: run.reload, expected_revision: run.lock_version,
-                       item_id: <span class="s">"counts"</span>, kind: <span class="s">"count"</span>, value: <span class="s">"4211 rows"</span>)
+                       item_id: <span class="s">"counts"</span>, kind: <span class="s">"count"</span>, value: <span class="s">"4211 rows"</span>,
+                       actor_ref: <span class="s">"agent:nightly"</span>)
 
 <b>Jazari</b>.close_run(run: run.reload, expected_revision: run.lock_version,
                  outcome: <span class="s">"completed"</span>)
@@ -451,7 +457,7 @@ run    = result[:run]
 <span class="o">#=&gt; { id: 4412, outcome: "completed", open: false,</span>
 <span class="o">#     started_at: 2026-08-10 03:00:04 UTC, finished_at: ... }</span></pre></div>
 
-      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.3"</span>
+      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.5"</span>
 
 bin/rails generate jazari:install
 bin/rails db:migrate
@@ -531,6 +537,22 @@ run_policy: <span class="s">"once_per_calendar_day"</span></pre></div>
           <span class="mono">timestamptz</span>, so one nightly ritual cannot land on two different
           days depending on which region’s machine called it.</p>
       </div>
+    </div>
+
+    <div class="note rv" style="margin-top:34px;max-width:78ch">
+      <h3 style="margin-bottom:10px">A run records who acted</h3>
+      <p class="muted" style="font-size:14.5px">A checkbox can say what is done. A run also says
+        <strong>who</strong> did it. Pass an opaque <span class="mono">actor_ref</span> for a human,
+        agent, or job. Explicit identities win; trusted system jobs may inject a default when a run
+        opens, and later ticks or evidence inherit the run actor when omitted.</p>
+      <pre style="margin-top:16px"><span class="cm"># explicit identity for a human or agent</span>
+<b>Jazari</b>.open_run(target: target, actor_ref: <span class="s">"user:42"</span>)
+<b>Jazari</b>.attach_evidence(run: run.reload, expected_revision: run.lock_version,
+                       item_id: <span class="s">"restore"</span>, kind: <span class="s">"note"</span>,
+                       value: <span class="s">"verified"</span>, actor_ref: <span class="s">"user:42"</span>)
+
+<span class="cm"># opt-in default for a trusted system job</span>
+<b>Jazari</b>.configure { |c| c.actor_ref = -&gt; { <span class="s">"system:nightly-backup"</span> } }</pre>
     </div>
   </div>
 </section>

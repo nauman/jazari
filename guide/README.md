@@ -11,5 +11,6 @@ The README is the pitch. These are the working documents.
 | [05 · MCP](05-mcp.md) | Exposing procedures to an agent |
 | [06 · Migrating an existing checklist](06-migrating.md) | You already have a runbook table and live data |
 
-Guides live here rather than in `docs/`, which is the GitHub Pages directory
-and holds the landing page only.
+These guides are the public usage documentation, published through Kuickr at
+<https://kuickr.co/jazari/guide>. The repository's `docs/` directory holds the
+landing page only.
