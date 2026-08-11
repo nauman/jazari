@@ -197,6 +197,7 @@ footer a{color:var(--gold)}
 <nav>
   <div class="wrap">
     <a class="brand" href="#top"><i></i>jazari</a>
+    <a class="l" href="#origin">Origin</a>
     <a class="l" href="#layers">Layers</a>
     <a class="l" href="#use">Usage</a>
     <a class="l" href="#runs">Runs</a>
@@ -226,11 +227,99 @@ footer a{color:var(--gold)}
     <div class="stats rv">
       <div class="stat"><b data-count="4">0</b><span>layers</span></div>
       <div class="stat"><b data-count="4">0</b><span>tables</span></div>
-      <div class="stat"><b data-count="75">0</b><span>tests</span></div>
+      <div class="stat"><b data-count="83">0</b><span>tests</span></div>
       <div class="stat"><b data-count="2">0</b><span>dependencies</span></div>
     </div>
   </div>
 </header>
+
+<!-- ══ origin — the road here ════════════════════════════════════════════ -->
+<section class="band" id="origin">
+  <div class="wrap">
+    <p class="eyebrow rv">Where this came from</p>
+    <h2 class="rv" style="margin-top:10px">This started as an MCP mistake.</h2>
+    <p class="lede rv" style="margin-top:18px">
+      Four MCP servers in Ruby and Rails, and the first one was built the way everyone
+      builds their first one: <strong>as another REST API</strong>. One tool per endpoint.
+    </p>
+
+    <div class="split rv" style="margin-top:38px">
+      <div>
+        <p>That surface grows the way an API grows, except an agent has to <em>read all of
+        it</em> before deciding anything. It had to be reconciled — a sprawl of endpoint-shaped
+        tools collapsed down to roughly fifteen, grouped by what someone is actually
+        trying to accomplish.</p>
+        <p style="margin-top:16px">The lesson is not "fewer tools". It is that <strong>MCP
+        is an adapter, not a layer</strong>. Business operations, queries and authorization
+        belong in shared services; REST and MCP are both thin skins over them. REST stays
+        resource-oriented. MCP should be a small set of <strong>task-oriented</strong>
+        tools shaped around an agent's goal.</p>
+        <p style="margin-top:16px">Which makes MCP feel closer to a standardised RPC — or
+        an old SOAP-style service contract — than to REST. That is fine. What is not fine
+        is letting it quietly become a <em>second service layer</em> with its own copy of
+        the rules.</p>
+      </div>
+      <div class="cards" style="margin-top:0">
+        <div class="card"><span class="n">THE MISTAKE</span>
+          <h3>One tool per endpoint</h3>
+          <p>The MCP surface mirrors the routes file. Every new endpoint is a new tool. The
+            agent reads a catalogue of verbs and has to assemble the intent itself.</p>
+          <span class="q">“what can I call?”</span></div>
+        <div class="card"><span class="n">THE CORRECTION</span>
+          <h3>A few tools per job</h3>
+          <p>The MCP surface mirrors intentions. Tools group around outcomes, and both
+            adapters call the same service — so authorization cannot drift between them.</p>
+          <span class="q">“what am I trying to do?”</span></div>
+      </div>
+    </div>
+
+    <div class="note rv" style="max-width:70ch;margin-top:44px">
+      <p>Working this way across four projects changed a different question entirely:
+      <strong>why does operational knowledge live permanently inside a repo?</strong>
+      Why is <span class="mono">deploy.md</span> a file, next to the code, in one repository,
+      when the procedure it describes governs a fleet?</p>
+    </div>
+
+    <h3 class="rv" style="margin-top:52px;font-size:clamp(20px,2.4vw,26px)">A document cannot be called</h3>
+    <p class="lede rv" style="margin-top:14px;max-width:70ch">
+      A markdown runbook is a fine thing to read and a useless thing to <em>operate</em>.
+      It has no state, no evidence, no revision guard, and no answer to
+      “is anyone doing this right now?” Committing it harder does not fix any of that.
+    </p>
+
+    <div class="cards c4 rv" style="margin-top:34px">
+      <div class="card"><span class="n">STEP ONE</span>
+        <h3>Attach a checklist</h3>
+        <p>Bolt items onto the record — a deploy, a site, an app. Real progress: state
+          becomes queryable. This is where most systems stop.</p>
+        <span class="q">solved: current state</span></div>
+      <div class="card"><span class="n">THE WALL</span>
+        <h3>Some rituals own no record</h3>
+        <p>Onboarding. Incident triage. The weekly review. There is no row to hang them on,
+          so they fall back to prose — the exact problem, returning.</p>
+        <span class="q">unsolved: everything else</span></div>
+      <div class="card"><span class="n">SO · QUEUES</span>
+        <h3>A stable name is enough</h3>
+        <p>A queue is a ritual addressed by <em>name</em>, needing no record at all — and
+          read-only by construction, because a ritual has exactly one editable home: its recipe.</p>
+        <span class="q">“run incident-triage”</span></div>
+      <div class="card"><span class="n">AND · RUNS</span>
+        <h3>Resetting destroys evidence</h3>
+        <p>A checklist you reset to run again has erased the proof it ever ran. Runs make
+          each execution its own object, with ticks, evidence and an outcome.</p>
+        <span class="q">“did last night complete?”</span></div>
+    </div>
+
+    <div class="note rv" style="max-width:74ch;margin-top:44px">
+      <p>Where it landed, in one line: <strong>rituals live in jazari</strong>; the
+      vocabulary stays a registry, because a lexicon is not a procedure; and resume becomes
+      subject-scoped by composing <span class="mono">resolve</span> against the canon.
+      The host names what a thing <em>is</em> and points at a recipe id. Nothing else
+      crosses the boundary — the gem never learns your fleet, and you never wait on a gem
+      release to fix a step.</p>
+    </div>
+  </div>
+</section>
 
 <!-- ══ the problem, as a chart ═══════════════════════════════════════════ -->
 <section class="band alt" id="problem">
@@ -362,7 +451,7 @@ run    = result[:run]
 <span class="o">#=&gt; { id: 4412, outcome: "completed", open: false,</span>
 <span class="o">#     started_at: 2026-08-10 03:00:04 UTC, finished_at: ... }</span></pre></div>
 
-      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.2"</span>
+      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.3"</span>
 
 bin/rails generate jazari:install
 bin/rails db:migrate
