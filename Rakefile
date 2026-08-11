@@ -32,6 +32,9 @@ TEST_ALLOWED = %w[
   Jazari DummySubject HostAnchor
   ActiveRecord Minitest
   Time Date Object ENV DB
+  # Ruby stdlib the suite legitimately drives: a loader that reads recipe files
+  # cannot be tested without naming the filesystem.
+  File Dir FileUtils YAML JSON Psych
   ArgumentError StandardError RuntimeError NameError NoMethodError TypeError KeyError
   String Symbol Integer Float Array Hash Struct Data Range Set
 ].freeze
@@ -46,7 +49,22 @@ task :boundary do
   end
 
   Dir["test/**/*.rb"].each do |file|
+    heredoc_terminator = nil
+
     File.readlines(file).each_with_index do |raw, i|
+      # A heredoc body is a string, and the rule below already says a capitalised
+      # word inside a string is data. Stripping only "..." and '...' missed that,
+      # so a YAML fixture written as <<~YML had its own prose read as constant
+      # references. Skip the body outright.
+      if heredoc_terminator
+        heredoc_terminator = nil if raw.strip == heredoc_terminator
+        next
+      end
+      if (opening = raw[/<<[~-]?["']?([A-Z_]+)["']?/, 1])
+        heredoc_terminator = opening
+        next
+      end
+
       next if raw.strip.start_with?("#")
 
       # Strip string literals and symbols first: a capitalised WORD inside

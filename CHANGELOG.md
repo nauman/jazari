@@ -8,6 +8,53 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.4.0] - 2026-08-11
+
+### Added
+
+- **`Jazari::RecipeFiles` — recipes as YAML or JSON, without files silently
+  overwriting operators.**
+
+  Nothing ever forbade files: `RecipeRegistry.seed!` takes plain hashes, so
+  `seed!(YAML.load_file(…))` already worked. What was missing was everything
+  that makes it *safe*.
+
+  - **`load(path)`** — a file or a directory of `.yml` / `.yaml` / `.json`.
+    Accepts one recipe, a list, or a list under a `recipes:` key. It validates
+    at LOAD, which is the whole reason it exists rather than "just call
+    `YAML.load_file`": an unknown key is a typo, and a typo that loads silently
+    becomes a recipe resolving to something nobody wrote. Unknown keys, missing
+    topics, bad `run_policy`, duplicate ids and malformed YAML all raise, naming
+    the file.
+  - **`dump(dir)`** — writes what is actually stored back out, one file per
+    recipe. Without this the loop never closes: an operator's runtime fix could
+    not be reviewed or committed, so runtime editing would quietly become the
+    thing you avoid rather than the thing the design is built around.
+  - **`drift(entries)`** — which stored recipes disagree with their file, and in
+    which fields. **Reported, never applied.**
+
+  **Files seed; they do not sync.** `seed!` stays create-if-missing, so a file
+  never overwrites a row an operator edited. That is the same rule the runbook
+  layer already follows — a customisation diverges rather than rebasing, because
+  silently overwriting a deliberate edit with a change nobody saw is the worst
+  available outcome. Applying files on every deploy would do exactly that, one
+  layer up. The cost is drift, so drift is made visible instead of resolved.
+
+  One place the loader is deliberately **stricter than the API**: a malformed
+  checklist id is an error rather than a fixup. `Checklist.normalize` replaces an
+  unusable id with a generated one, which is right when an id is absent and
+  opaque — but in a file someone wrote it, MCP addresses the step by it, and
+  documentation quotes it. Swapping it for a random token would create exactly
+  the file-versus-row disagreement this loader exists to prevent.
+
+### Fixed
+
+- **The boundary check read heredoc bodies as code.** It stripped `"…"` and
+  `'…'` on the stated principle that a capitalised word inside a string is data,
+  but a fixture written as `<<~YML` had its own prose reported as constant
+  references. Heredoc bodies are now skipped. Verified still catching a planted
+  breach.
+
 ## [0.3.0] - 2026-08-11
 
 ### Added

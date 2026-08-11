@@ -8,6 +8,7 @@ require "jazari/targets"
 require "jazari/anchors"
 require "jazari/resolved_runbook"
 require "jazari/recipe_registry"
+require "jazari/recipe_files"
 require "jazari/runs"
 require "jazari/operations"
 # The MCP layer is OPTIONAL. Descriptors are cheap and a host may want them to

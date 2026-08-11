@@ -117,3 +117,47 @@ who ran it, and what came back.
 The name `runbook` was taken on RubyGems by a DSL for *executing* procedures;
 that project last released in 2021 and last committed in 2022, so treat it as
 historical context for the naming rather than something to build on.
+
+## Where recipes live
+
+In a table. That is what makes fixing a procedure a **write, not a deploy** — an
+operator corrects a step at 3am without waiting for CI.
+
+That does not mean the canon cannot be version-controlled. `Jazari::RecipeFiles`
+reads YAML or JSON:
+
+```ruby
+Jazari::RecipeRegistry.seed!(Jazari::RecipeFiles.load("config/recipes"))
+```
+
+Call it from a **data migration**, not `db/seeds.rb` — boot usually runs
+`db:prepare`, which seeds only on first create, so an existing database never
+sees it.
+
+**Files seed; they do not sync.** `seed!` is create-if-missing, so re-running it
+never overwrites a row an operator has edited. This is the same rule the runbook
+layer follows: a customisation diverges rather than rebasing, because silently
+overwriting a deliberate edit with a change nobody saw is the worst outcome
+available. Applying files on every deploy would do exactly that.
+
+The cost of that choice is drift — a file and a row can disagree and nothing says
+so. So ask:
+
+```ruby
+Jazari::RecipeFiles.drift(Jazari::RecipeFiles.load("config/recipes"))
+# => [{ id: "deploy.v1", state: :differs, fields: [:topic] }]
+```
+
+It reports; it never resolves. What a difference *means* is yours to decide: on
+one fleet the file is reviewed truth and a divergent row is an incident; on
+another the row is an operator's fix and the file is stale.
+
+And to close the loop — export what they actually changed, then diff it in a
+pull request:
+
+```ruby
+Jazari::RecipeFiles.dump("config/recipes")
+```
+
+Without that export, runtime editing quietly becomes the thing you avoid rather
+than the thing the design is built around.
