@@ -12,6 +12,13 @@ module Jazari
   class InvalidRunbook < Error; end
   class RevisionConflict < Error; end
   class ItemNotFound < Error; end
+
+  # The item exists — it just post-dates the snapshot this run froze at open.
+  # A subclass, so a host that already rescues ItemNotFound keeps working, and
+  # one that wants to tell "no such step" from "not this run's step" can.
+  # Without the distinction a caller cannot choose between failing, retrying,
+  # and proceeding, and ends up matching on prose.
+  class ItemNotInSnapshot < ItemNotFound; end
   class ReadOnlyTarget < Error; end
   class RunClosed < Error; end
 end

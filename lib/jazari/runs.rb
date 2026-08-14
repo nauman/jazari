@@ -85,12 +85,15 @@ module Jazari
         end
 
         known = snapshot.map { |item| item["id"] }
-        raise ItemNotFound, "unknown checklist item #{item_id}" unless known.include?(item_id.to_s)
+        late = admit_late_item!(record, snapshot, item_id) unless known.include?(item_id.to_s)
+        record.checklist_snapshot = snapshot + [ late ] if late
 
         ticks = stored(record.ticks).reject { |t| t["id"] == item_id.to_s }
-        ticks << { "id" => item_id.to_s, "done" => done == true, "at" => now.utc.iso8601,
-                   "actor_ref" => resolve_actor_ref(actor_ref, fallback: record.actor_ref),
-                   "note" => note&.to_s }
+        tick = { "id" => item_id.to_s, "done" => done == true, "at" => now.utc.iso8601,
+                 "actor_ref" => resolve_actor_ref(actor_ref, fallback: record.actor_ref),
+                 "note" => note&.to_s }
+        tick["post_snapshot"] = true if late
+        ticks << tick
         record.ticks = ticks
       end
     end
@@ -157,6 +160,58 @@ module Jazari
       record
     end
     private_class_method :mutate
+
+    # A step discovered mid-run is the ordinary case, not an anomaly: a deploy
+    # is exactly when a missing step is found. Refusing the tick pushes that
+    # work outside the record, which is the one thing the record exists to
+    # provide — so the snapshot WIDENS, and says that it did.
+    #
+    # It widens from the SUBJECT'S OWN runbook only, never from the recipe.
+    # Those are different events wearing the same shape:
+    #
+    #   * someone performing this run added a step to this subject — legal, and
+    #     the run should carry it;
+    #   * the canon moved underneath an in-flight run — not legal, and the
+    #     snapshot exists precisely to hold that line (see `open`).
+    #
+    # A queue run has no subject, so its checklist IS the recipe and it can
+    # never widen. That is the correct answer there, not a limitation.
+    def admit_late_item!(record, snapshot, item_id)
+      id = item_id.to_s
+      item = subject_checklist(record).find { |i| i["id"] == id }
+      unless item
+        # Distinguish "no such step anywhere" from "exists in the canon, but
+        # this run froze before it did" — the caller's response differs.
+        raise ItemNotInSnapshot, "checklist item #{item_id} post-dates run #{record.id}'s snapshot" if
+          recipe_item?(record, id)
+
+        raise ItemNotFound, "unknown checklist item #{item_id}"
+      end
+      raise InvalidRunbook, "run #{record.id} snapshot exceeds #{Checklist::MAX_ITEMS} items" if
+        snapshot.length >= Checklist::MAX_ITEMS
+
+      # Marked, so a reader can tell what the run opened against from what it
+      # picked up along the way. Widening silently would make the snapshot a
+      # record of the present, which is the opposite of its job.
+      item.merge("post_snapshot" => true)
+    end
+    private_class_method :admit_late_item!
+
+    def subject_checklist(record)
+      return [] unless record.subject_type && record.subject_id
+
+      runbook = Runbook.find_by(runbookable_type: record.subject_type,
+                                runbookable_id: record.subject_id)
+      stored(runbook&.checklist)
+    end
+    private_class_method :subject_checklist
+
+    def recipe_item?(record, id)
+      RecipeRegistry.fetch(record.recipe_id).checklist.any? { |i| i[:id].to_s == id }
+    rescue Error
+      false
+    end
+    private_class_method :recipe_item?
 
     def find_days_run(attributes)
       Run.where(

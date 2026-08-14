@@ -5,6 +5,7 @@ require_relative "test_helper"
 class RunsTest < Minitest::Test
   def setup
     Jazari::Run.delete_all
+    Jazari::Runbook.delete_all
     Jazari::RecipeRecord.delete_all
     DummySubject.delete_all
 
@@ -201,6 +202,10 @@ class RunsReviewRegressionsTest < Minitest::Test
     Jazari::QueueTarget.new(queue: "q", public_reference: {}, recipe_id: recipe_id)
   end
 
+  def record_target(subject, recipe_id)
+    Jazari::RecordTarget.new(runbookable: subject, public_reference: { kind: "dummy" }, recipe_id: recipe_id)
+  end
+
   # Finding 5 — a run is bound to the canon it opened against.
   def test_an_in_flight_run_still_ticks_its_own_steps_after_the_recipe_changes
     run = Jazari::Runs.open(target: queue("adhoc.v1"), actor_ref: "a")[:run]
@@ -236,6 +241,63 @@ class RunsReviewRegressionsTest < Minitest::Test
     assert_equal [ "custom-step" ], run.checklist_snapshot.map { |item| item["id"] }
     Jazari::Runs.tick(run: run, expected_revision: run.lock_version,
                       item_id: "custom-step", done: true, actor_ref: "user:1")
+  end
+
+  # --- a step discovered mid-run ---------------------------------------
+  #
+  # Reported by conductor-agent from a production deploy: the host's canonical
+  # check_item committed and then `tick` raised, so a caller was told a write
+  # failed while it stood. The ruling is that the edit is legal.
+
+  def test_a_step_added_to_the_subject_mid_run_ticks_and_is_marked_as_late
+    subject = DummySubject.create!(name: "mid-run")
+    target = record_target(subject, "adhoc.v1")
+    run = Jazari::Runs.open(target: target, actor_ref: "user:1")[:run]
+
+    resolved = Jazari.resolve(target: target)
+    added = Jazari.add_item(target: target, expected_revision: resolved.revision,
+                            text: "Discovered during the deploy")
+    late_id = (added.checklist.map { |i| i[:id] } - [ "step-a" ]).first
+
+    Jazari::Runs.tick(run: run, expected_revision: run.lock_version,
+                      item_id: late_id, done: true, actor_ref: "user:1")
+
+    tick = run.reload.ticks.first
+    assert_equal late_id, tick["id"]
+    assert tick["post_snapshot"], "a tick the snapshot did not anticipate must say so"
+
+    late = run.checklist_snapshot.find { |i| i["id"] == late_id }
+    assert late, "the run must carry the step it recorded, or its evidence is incomplete"
+    assert late["post_snapshot"], "widening silently would make the snapshot a record of the present"
+    assert_equal [ "step-a", late_id ], run.checklist_snapshot.map { |i| i["id"] }
+  end
+
+  # The line the snapshot exists to hold: the canon moving under an in-flight
+  # run is NOT the same event as an operator adding a step to this subject.
+  def test_a_step_added_to_the_recipe_mid_run_is_still_refused_but_says_which_kind
+    run = Jazari::Runs.open(target: queue("adhoc.v1"), actor_ref: "a")[:run]
+    Jazari::RecipeRecord.find_by(recipe_id: "adhoc.v1")
+      .update!(checklist: [ { "id" => "step-a", "text" => "Do it", "done" => false },
+                            { "id" => "step-b", "text" => "B", "done" => false } ])
+
+    error = assert_raises(Jazari::ItemNotInSnapshot) do
+      Jazari::Runs.tick(run: run, expected_revision: run.lock_version,
+                        item_id: "step-b", done: true, actor_ref: "a")
+    end
+    assert_kind_of Jazari::ItemNotFound, error, "a host rescuing the old class must keep working"
+    assert_equal 0, run.reload.ticks.length
+    assert_equal [ "step-a" ], run.checklist_snapshot.map { |i| i["id"] }
+  end
+
+  def test_a_step_that_exists_nowhere_is_still_simply_unknown
+    subject = DummySubject.create!(name: "unknown")
+    run = Jazari::Runs.open(target: record_target(subject, "adhoc.v1"), actor_ref: "user:1")[:run]
+
+    error = assert_raises(Jazari::ItemNotFound) do
+      Jazari::Runs.tick(run: run, expected_revision: run.lock_version,
+                        item_id: "no-such-step", done: true, actor_ref: "user:1")
+    end
+    refute_kind_of Jazari::ItemNotInSnapshot, error
   end
 
   # Finding 2 — a unique violation we do not own must not be read as reuse.

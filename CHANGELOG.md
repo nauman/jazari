@@ -8,6 +8,29 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.6.0] - 2026-08-15
+
+### Added
+
+- **A step discovered mid-run is legal.** `tick` now accepts an item that was
+  added to the subject's own runbook after the run opened: it widens the run's
+  `checklist_snapshot` to carry the item and marks both the snapshot entry and
+  the tick with `post_snapshot: true`. Reported from a production deploy where
+  a host's canonical `check_item` had already committed when `tick` raised —
+  the caller was told a write failed while it stood, and retrying a
+  half-applied two-phase write is how a double record happens.
+
+  A **recipe** change mid-run is still refused. Those are different events: the
+  canon moving underneath an in-flight run is someone else's edit arriving
+  uninvited, and that is what the snapshot exists to hold out. A queue run has
+  no subject, so its checklist is the recipe and it never widens.
+
+- `Jazari::ItemNotInSnapshot` (code `item_not_in_snapshot`), raised when the
+  item exists in the canon but post-dates the run's snapshot. It subclasses
+  `ItemNotFound`, so hosts rescuing the old class keep working, and hosts that
+  need to choose between failing, retrying and proceeding stop matching on the
+  message text.
+
 ## [0.5.2] - 2026-08-12
 
 ### Fixed

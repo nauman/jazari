@@ -65,9 +65,42 @@ would not constrain queue runs **at all**.
 
 A run snapshots its checklist when it opens. Edit the recipe mid-run and the
 in-flight run still ticks its own steps — and refuses steps that did not exist
-when it started.
+when it started, with `Jazari::ItemNotInSnapshot`.
 
 Without this, improving a procedure silently breaks every run in progress.
+
+## But a step the operator adds mid-run is legal
+
+Those look alike and are not. The canon moving underneath an in-flight run is
+someone else's edit arriving uninvited. A step added to **this subject's own
+runbook** is the person performing the run discovering that the procedure was
+incomplete — which is exactly when that gets discovered.
+
+So `tick` accepts it, widens the run's snapshot to carry it, and marks both the
+new snapshot entry and the tick with `"post_snapshot" => true`:
+
+```ruby
+Jazari.add_item(target:, expected_revision:, text: "Free the published port")
+Jazari::Runs.tick(run:, expected_revision:, item_id: new_id, done: true)
+# run.ticks.last["post_snapshot"] => true
+```
+
+The marker is the point. Widening silently would make the snapshot a record of
+the present, and the run could no longer say what it opened against.
+
+The alternative — refusing the tick — was rejected in the field: a host had
+already committed its own canonical `check_item` when `tick` raised, so the
+caller was told a write had failed while it stood committed, and the natural
+response (retry) is how you get a double record. Refusing the *edit* up front
+would at least be honest, but it pushes the discovered step outside the record,
+which is the one thing the record exists to provide.
+
+A queue run has no subject, so its checklist **is** the recipe and it can never
+widen. That is the correct answer there, not a limitation.
+
+`ItemNotInSnapshot` subclasses `ItemNotFound`, so a host rescuing the old class
+keeps working while one that wants to tell "no such step anywhere" from "not
+this run's step" no longer has to match on the message.
 
 ## Evidence
 

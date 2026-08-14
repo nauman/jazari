@@ -87,7 +87,10 @@ what you actually saw. Each tick and evidence entry records its actor too, so th
 history stops being destroyed by the act of starting over.
 
 A run also **snapshots its checklist when it opens**, so editing a recipe
-mid-run does not break runs in flight.
+mid-run does not break runs in flight. A step added to the subject's own runbook
+during the run is a different event — the operator discovering the procedure was
+incomplete — so that one is admitted and marked `post_snapshot`. See
+[04-runs](04-runs.md).
 
 ## Three cross-cutting rules
 
