@@ -89,6 +89,30 @@ and `last_run` starts answering immediately.
 Losing those timestamps is also a defensible choice — just make it explicitly,
 rather than letting them disappear quietly.
 
+## While both surfaces are live, audit for ACCOUNTABILITY, not parity
+
+The obvious check during a cutover is item-by-item equality between the old
+table and jazari. It will be wrong, and in a way that gets worse the longer it
+runs.
+
+Your legacy table has no concept of a run. Jazari does. So a step that was
+ticked inside a run that later ended is `done` in the legacy row forever, and
+correctly not `done` on the current runbook — the two models disagree about what
+`done` *means*, and no amount of copying closes the gap. The only way to make a
+parity check pass is to tick items in the current run on the strength of
+evidence gathered in a superseded one, which is exactly the lie the run layer
+exists to prevent.
+
+So make the gate: **every legacy fact is either present in jazari, or written
+down as a known exception with its reason and its date.** Green means "nothing
+is unexplained", not "nothing differs". Then retire the audit at the drop rather
+than leaving it to alarm on ordinary operator edits — a red check nobody acts on
+costs more than it catches.
+
+(From Conductor's cutover: three items ticked in the legacy table on 2026-08-11
+belonged to a run that was abandoned, and the agent who found them was right to
+refuse to copy them forward.)
+
 ## Backfill on the right condition
 
 The trap: creating a runbook row only for records whose runbook **text** is
