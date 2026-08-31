@@ -264,6 +264,82 @@ class OperationsTest < Minitest::Test
     assert_equal "migration", ticked.origin,
                  "doing the procedure is not rewriting it"
   end
+
+  # --- the payload bound ------------------------------------------------
+  #
+  # 50 rows was inherited from a host, never measured. codex measured the live
+  # board at 17,252 serialized bytes for 50 items, 278 characters per step.
+  #
+  # These tests do NOT pin that number — it came from live data this suite does
+  # not have, and a synthetic stand-in is 16,691 because real ids and text are
+  # not uniform. What they pin is the shape of the conclusion: a realistic
+  # 50-step procedure sits far inside the ceiling, and rows are not what bind.
+
+  def test_a_realistic_fifty_step_procedure_is_well_inside_the_bound
+    items = Array.new(50) { |i| { id: "step-#{i}", text: "x" * 278, done: false, required: true } }
+
+    bytes = Jazari::Checklist.payload_bytes(items)
+
+    assert_operator bytes, :<, Jazari::Checklist::MAX_PAYLOAD,
+      "the measured real-world document must not be near the ceiling"
+    assert_equal items.length, Jazari::Checklist.normalize(items).length
+  end
+
+  def test_the_bound_is_bytes_not_rows
+    fat = Array.new(130) { |i| { id: "step-#{i}", text: "x" * 500, done: false, required: true } }
+
+    error = assert_raises(Jazari::InvalidRunbook) { Jazari::Checklist.normalize(fat) }
+    assert_match(/payload/, error.message)
+    assert_match(/#{Jazari::Checklist::MAX_PAYLOAD}/, error.message)
+
+    # Same row count, small steps: accepted. Rows were never the thing that hurt.
+    lean = Array.new(130) { |i| { id: "step-#{i}", text: "Do it", done: false, required: true } }
+    assert_equal 130, Jazari::Checklist.normalize(lean).length
+  end
+
+  # The derived ceiling, pinned so the comment and the changelog cannot drift
+  # from the code the way the first estimate did.
+  def test_the_minimal_step_ceiling_is_measured_not_estimated
+    row = Jazari::Checklist.normalize([ { text: "x" } ])
+    assert_equal 67, Jazari::Checklist.payload_bytes(row)
+
+    minimal = ->(n) { Array.new(n) { { id: "x" * 16, text: "x", done: false, required: true } } }
+    assert_operator Jazari::Checklist.payload_bytes(minimal.call(992)), :<=, Jazari::Checklist::MAX_PAYLOAD
+    assert_operator Jazari::Checklist.payload_bytes(minimal.call(993)), :>, Jazari::Checklist::MAX_PAYLOAD
+  end
+
+  def test_the_payload_is_measured_on_the_stored_form_not_the_input
+    symbols = [ { id: "a", text: "Do it", done: false, required: true } ]
+    strings = [ { "id" => "a", "text" => "Do it", "done" => false, "required" => true } ]
+
+    assert_equal Jazari::Checklist.payload_bytes(symbols),
+                 Jazari::Checklist.payload_bytes(strings),
+                 "the same document must not be legal in one input shape and illegal in another"
+  end
+
+  # The hole a whole-document bound leaves: appending one step at a time.
+  def test_add_item_cannot_walk_past_the_bound_one_step_at_a_time
+    subject = @subject
+    target = Jazari::RecordTarget.new(runbookable: subject, public_reference: {}, recipe_id: "canon.v1")
+
+    resolved = Jazari.resolve(target: target)
+    huge = [ { id: "big", text: "x" * 500, done: false, required: true } ] * 1
+    resolved = Jazari.customize(target: target, expected_revision: resolved.revision,
+                                topic: "T", description: "d", checklist: huge)
+
+    # Append until it refuses; it must refuse on payload, not on a row count.
+    error = nil
+    130.times do
+      resolved = Jazari.add_item(target: target, expected_revision: resolved.revision, text: "x" * 500)
+    rescue Jazari::InvalidRunbook => e
+      error = e
+      break
+    end
+
+    refute_nil error, "appending one at a time must hit the same ceiling as a whole-document write"
+    assert_match(/payload/, error.message)
+  end
+
 end
 
 class OperationsAnchorReadPathTest < Minitest::Test

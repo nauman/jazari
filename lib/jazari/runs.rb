@@ -187,13 +187,19 @@ module Jazari
 
         raise ItemNotFound, "unknown checklist item #{item_id}"
       end
-      raise InvalidRunbook, "run #{record.id} snapshot exceeds #{Checklist::MAX_ITEMS} items" if
-        snapshot.length >= Checklist::MAX_ITEMS
+      # The same bound as every other write path. A snapshot widened one late
+      # step at a time is still a payload — it is copied per run, and it is what
+      # an MCP reader has to fit in a context window.
+      widened = item.merge("post_snapshot" => true)
+      # bound_stored!, not bound! — these rows carry `post_snapshot`, and the
+      # canonical projection would drop it and undercount the column by a
+      # margin that grows with every late step.
+      Checklist.bound_stored!(snapshot + [ widened ])
 
       # Marked, so a reader can tell what the run opened against from what it
       # picked up along the way. Widening silently would make the snapshot a
       # record of the present, which is the opposite of its job.
-      item.merge("post_snapshot" => true)
+      widened
     end
     private_class_method :admit_late_item!
 

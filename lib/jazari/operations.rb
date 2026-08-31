@@ -38,10 +38,12 @@ module Jazari
     def add_item(target:, expected_revision:, text:, required: true)
       writable!(target)
       write(target, expected_revision) do |current|
-        items = current[:checklist] + [
-          { id: Checklist.generate_id, text: text.to_s, done: false, required: required == true }
-        ]
-        Checklist.validate!(items)
+        # normalize, not validate! — one choke point, so a step appended one at
+        # a time cannot walk past a bound that a whole-document write enforces.
+        items = Checklist.normalize(
+          current[:checklist] + [ { id: Checklist.generate_id, text: text.to_s,
+                                    done: false, required: required == true } ]
+        )
         current.merge(checklist: items)
       end
     end

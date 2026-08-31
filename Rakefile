@@ -36,7 +36,7 @@ TEST_ALLOWED = %w[
   # cannot be tested without naming the filesystem.
   File Dir FileUtils YAML JSON Psych
   ArgumentError StandardError RuntimeError NameError NoMethodError TypeError KeyError
-  String Symbol Integer Float Array Hash Struct Data Range Set
+  String Symbol Integer Float Array Hash Struct Data Range Set Regexp
 ].freeze
 
 desc "Fail if the gem or its suite couples to anything outside its own namespace"
@@ -72,7 +72,10 @@ task :boundary do
       # check reports the suite's own fixture text as a boundary breach.
       line = raw.gsub(/"[^"]*"/, '""').gsub(/'[^']*'/, "''")
                 .gsub(%r{/(?:[^/\\]|\\.)*/}, "//")   # regex literals: /\A[A-Za-z0-9]/ is not a constant
-                .gsub(/:[a-z_]+/, "")
+                # camelCase symbols too: `:maxItems` must not leave `Items`
+                # behind to be reported as a constant. JSON Schema keywords are
+                # camelCase, so the descriptors are full of them.
+                .gsub(/:[a-z_][A-Za-z0-9_]*/, "")
 
       # Match a WHOLE constant path and judge only its root: `Foo::Bar::Baz`
       # is a reference to `Foo`. The lookbehind stops us matching `Bar` and

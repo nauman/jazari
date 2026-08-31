@@ -8,6 +8,52 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.7.0] - 2026-08-30
+
+### Changed
+
+- **The checklist bound is now BYTES, not rows.** `MAX_PAYLOAD = 65_536`,
+  measured on the normalized stored form — the string-keyed rows actually
+  written to jsonb, never the caller's input and never an MCP envelope. Input
+  arrives in four shapes and envelopes differ per host, so counting either
+  would make the same document legal on one path and illegal on another.
+
+  **`MAX_ITEMS` is removed — there is no row cap at all.** The 50 was inherited
+  from a host that already had it and was never benchmarked: a measured 50-step
+  procedure serializes to ~16.7 KB at 278 characters a step, so the row cap was
+  rejecting documents four times smaller than what actually hurts. An interim
+  draft kept a cap at 200 as a "guard against absurdity"; that was as unmeasured
+  as the 50, and would have rejected a 201-step document sitting well inside the
+  byte bound for exactly the old reason. The absurdity case is already answered
+  by measurement — a normalized minimal step is 67 bytes, so `MAX_PAYLOAD`
+  admits 992 of them and no more. Hosts referencing `Jazari::Checklist::MAX_ITEMS`
+  must switch to `MAX_PAYLOAD`.
+
+  One validator now covers every path — whole-document writes, recipe files,
+  and the 0.6.0 late snapshot widening. `add_item` routes through `normalize`
+  rather than `validate!`, closing the hole where a document could be walked
+  past the ceiling one step at a time.
+
+  `MAX_TEXT` is unchanged at 500.
+
+### Fixed
+
+- **The published MCP `checklist` schema was an untyped `array`.** A client
+  generating from the descriptor could infer `string[]`, send `["step one"]`,
+  and be rejected by the domain with "checklist item must be a hash" — the
+  schema and the validator disagreed, and only the client found out. It now
+  publishes the object shape the validator enforces — `text` required with
+  `minLength`/`maxLength`, `id` carrying the real `pattern`, `additionalProperties:
+  false` matching the key allowlist — and discloses the aggregate byte bound in
+  its description, since JSON Schema cannot express it and an undocumented limit
+  is the same failure as an untyped array.
+
+  The contract test asserts **containment**: nothing the published schema admits
+  may be rejected by the domain. `done` is the one deliberate exception in the
+  safe direction — the schema publishes `boolean` while the domain silently
+  coerces `"yes"` to `false`, so a client is told up front rather than misled
+  afterwards.
+
 ## [0.6.0] - 2026-08-15
 
 ### Added
