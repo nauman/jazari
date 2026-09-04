@@ -6,7 +6,8 @@ Recipes as data, per-subject runbooks, stable names for rituals that outlive any
 record, and per-run evidence — so *"did last night's run actually complete?"*
 is a query rather than a guess.
 
-Requires Ruby 3.2+, Rails 7.1+, and PostgreSQL.
+Requires Ruby 3.2+. Embed it in Rails 7.1+ with PostgreSQL, or run the
+on-demand standalone CLI with SQLite.
 
 ---
 
@@ -18,6 +19,12 @@ is the operating manual. Its source lives in [`guide/`](guide/), including
 different than you expect), [adoption](guide/02-adoption.md),
 [anchors](guide/03-anchors.md), [runs and evidence](guide/04-runs.md),
 [MCP](guide/05-mcp.md), and [migrating an existing checklist](guide/06-migrating.md).
+[Standalone SQLite, JSON, and MCP stdio](guide/07-standalone.md) covers the
+on-demand executable.
+
+The public [`jazari/v1` JSON contract](protocol/v1/) and its conformance fixtures
+are shipped with the gem. Development plans and agent coordination stay out of
+this public repository.
 
 ## The problem
 
@@ -64,6 +71,20 @@ bin/rails db:migrate
 The generator copies one migration. **Jazari never auto-appends migrations** to
 your schema — a shared operations table appearing in someone's next
 `db:migrate` without them asking is how a gem loses trust in a production fleet.
+
+For a local standalone database:
+
+```bash
+jazari recipes seed config/recipes --database .jazari/jazari.sqlite3
+jazari capabilities --database .jazari/jazari.sqlite3 --json
+jazari call --database .jazari/jazari.sqlite3 --request request.json
+jazari mcp stdio --database .jazari/jazari.sqlite3 --recipes config/recipes
+```
+
+The process starts for the command or MCP stdio session and exits with its
+caller. It opens no port, installs no daemon, and stores no credentials. Queue
+and anchor targets are supported; an embedding host still owns authorization
+and record-backed targets.
 
 ## Thirty seconds
 
@@ -211,7 +232,7 @@ Jazari::Mcp::Handler.new.call(action: "get", target: target)
 with its own subject vocabulary and permissions; this handler is the shared
 implementation underneath. Domain failures cross the wire as codes from a closed
 set — `target_not_found`, `invalid_runbook`, `revision_conflict`,
-`item_not_found`, `read_only_target`, `run_closed` — never as messages that
+`item_not_found`, `item_not_in_snapshot`, `read_only_target`, `run_closed` — never as messages that
 could disclose a record or whether a target exists.
 
 `Handler.actions_for("read")` returns the read-only subset, so a read-scoped
@@ -251,15 +272,16 @@ That removes the subject's runbook. **Runs are deliberately preserved** — a ru
 records something that actually happened, and deleting the subject does not
 un-happen it.
 
-## PostgreSQL only
+## PostgreSQL and SQLite
 
-The guarantees lean on Postgres: `jsonb`, `timestamptz`, four CHECK constraints,
-and a partial unique index over a `COALESCE`d polymorphic subject. Supporting a
-second adapter would make those conditional, which weakens the design. Other
-adapters are additive — open an issue if you need one.
+Rails hosts keep PostgreSQL's `jsonb`, `timestamptz`, CHECK constraints, and
+partial expression index. Standalone mode uses SQLite JSON columns, UTC date
+checks, foreign keys, WAL, a busy timeout, and the same partial expression
+index. Adapter syntax differs; observable revision, idempotency, snapshot,
+attribution, and evidence behavior does not.
 
-The test suite runs **the migration the gem ships**, so the schema cannot drift
-out of coverage.
+The test suite runs **the migration the gem ships** against both adapters and
+replays the same JSON fixtures against PostgreSQL and SQLite.
 
 ## What this is not
 

@@ -39,6 +39,24 @@ class McpActionsTest < Minitest::Test
     assert_includes host_tool[:properties][:action][:enum], "tick"
   end
 
+  def test_the_complete_input_schema_closes_each_action_variant
+    require "json_schemer"
+    target = {
+      type: "object", required: [ :kind ],
+      properties: { kind: { const: "queue" } }, additionalProperties: false
+    }
+    document = JSON.parse(JSON.generate(Jazari::Mcp::Actions.input_schema(target_schema: target)))
+    schema = JSONSchemer.schema(document)
+
+    assert schema.valid?({ "action" => "get", "target" => { "kind" => "queue" } })
+    refute schema.valid?({ "action" => "get", "target" => { "kind" => "queue" },
+                           "run_id" => 1 })
+    refute schema.valid?({ "action" => "add_item", "target" => { "kind" => "queue" },
+                           "expected_revision" => "one" })
+    assert schema.valid?({ "action" => "add_item", "target" => { "kind" => "queue" },
+                           "expected_revision" => "one", "text" => "Do it" })
+  end
+
   def test_a_read_scoped_fragment_carries_no_write_parameters
     frag = Jazari::Mcp::Actions.schema_fragment(scope: :read)
     assert_equal %w[get last_run], frag[:enum]
@@ -95,6 +113,15 @@ class McpActionsTest < Minitest::Test
     RUBY
     out = IO.popen([ "ruby", "-I", "lib", "-e", script ], &:read)
     assert_includes out, "get", "requiring the handler alone must not NameError"
+  end
+
+  def test_the_json_dispatcher_and_stdio_server_can_be_required_standalone
+    %w[jazari/protocol/dispatcher jazari/mcp/stdio_server].each do |feature|
+      script = "require #{feature.inspect}; puts :loaded"
+      out = IO.popen([ "ruby", "-I", "lib", "-e", script ], err: %i[child out], &:read)
+
+      assert_equal "loaded\n", out, "#{feature} must own its load-time dependencies"
+    end
   end
 
   # --- descriptor -> served schema -> domain ----------------------------

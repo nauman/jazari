@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nauman/jazari/protocol/v1/request.schema.json",
+  "title": "Jazari v1 request",
+  "$defs": {
+    "requestId": { "type": "string", "minLength": 1 },
+    "revision": { "type": "string", "minLength": 1 },
+    "checklistItem": {
+      "type": "object",
+      "required": ["text"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+        "text": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "done": { "type": "boolean" },
+        "required": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "key", "recipe_id"],
+          "properties": {
+            "kind": { "const": "queue" },
+            "key": { "type": "string", "minLength": 1 },
+            "recipe_id": { "type": "string", "minLength": 1 },
+            "public_reference": { "type": "object" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": ["kind", "scope_type", "scope_id", "key", "recipe_id"],
+          "properties": {
+            "kind": { "const": "anchor" },
+            "scope_type": { "type": "string", "minLength": 1 },
+            "scope_id": { "type": "integer" },
+            "key": { "type": "string", "minLength": 1 },
+            "recipe_id": { "type": "string", "minLength": 1 },
+            "public_reference": { "type": "object" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "required": ["protocol", "request_id", "action", "arguments"],
+  "properties": {
+    "protocol": { "const": "jazari/v1" },
+    "request_id": { "$ref": "#/$defs/requestId" },
+    "action": { "type": "string" },
+    "target": { "$ref": "#/$defs/target" },
+    "arguments": { "type": "object" }
+  },
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": {
+        "action": { "const": "capabilities" },
+        "arguments": { "type": "object", "maxProperties": 0, "additionalProperties": false }
+      },
+      "not": { "required": ["target"] }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "enum": ["get", "last_run"] },
+        "arguments": { "type": "object", "maxProperties": 0, "additionalProperties": false }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "set" },
+        "arguments": {
+          "type": "object",
+          "required": ["expected_revision", "topic", "checklist"],
+          "properties": {
+            "expected_revision": { "$ref": "#/$defs/revision" },
+            "topic": { "type": "string", "minLength": 1, "maxLength": 120 },
+            "description": { "type": "string", "maxLength": 20000 },
+            "checklist": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/checklistItem" },
+              "description": "The normalized stored checklist must be at most 65536 bytes."
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "add_item" },
+        "arguments": {
+          "type": "object", "required": ["expected_revision", "text"],
+          "properties": {
+            "expected_revision": { "$ref": "#/$defs/revision" },
+            "text": { "type": "string", "minLength": 1, "maxLength": 500 },
+            "required": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "remove_item" },
+        "arguments": {
+          "type": "object", "required": ["expected_revision", "item_id"],
+          "properties": {
+            "expected_revision": { "$ref": "#/$defs/revision" },
+            "item_id": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "check_item" },
+        "arguments": {
+          "type": "object", "required": ["expected_revision", "item_id", "done"],
+          "properties": {
+            "expected_revision": { "$ref": "#/$defs/revision" },
+            "item_id": { "type": "string", "minLength": 1 },
+            "done": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "reset" },
+        "arguments": {
+          "type": "object", "required": ["expected_revision", "confirm"],
+          "properties": {
+            "expected_revision": { "$ref": "#/$defs/revision" },
+            "confirm": { "type": "boolean", "const": true }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "start" },
+        "arguments": {
+          "type": "object", "required": ["actor_ref"],
+          "properties": { "actor_ref": { "type": "string", "minLength": 1 } },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "tick" },
+        "arguments": {
+          "type": "object", "required": ["run_id", "expected_revision", "item_id", "done"],
+          "properties": {
+            "run_id": { "type": "integer", "minimum": 1 },
+            "expected_revision": { "$ref": "#/$defs/revision" },
+            "item_id": { "type": "string", "minLength": 1 },
+            "done": { "type": "boolean" },
+            "actor_ref": { "type": "string", "minLength": 1 },
+            "note": { "type": "string", "maxLength": 500 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "evidence" },
+        "arguments": {
+          "type": "object", "required": ["run_id", "expected_revision", "kind", "value"],
+          "properties": {
+            "run_id": { "type": "integer", "minimum": 1 },
+            "expected_revision": { "$ref": "#/$defs/revision" },
+            "item_id": { "type": "string", "minLength": 1 },
+            "kind": { "enum": ["output", "url", "sha", "count", "note"] },
+            "value": { "type": "string", "maxLength": 2000 },
+            "actor_ref": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        }
+      }
+    },
+    {
+      "required": ["target"],
+      "properties": {
+        "action": { "const": "finish" },
+        "arguments": {
+          "type": "object", "required": ["run_id", "expected_revision", "outcome"],
+          "properties": {
+            "run_id": { "type": "integer", "minimum": 1 },
+            "expected_revision": { "$ref": "#/$defs/revision" },
+            "outcome": { "enum": ["completed", "abandoned", "failed"] }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

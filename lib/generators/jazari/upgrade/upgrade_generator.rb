@@ -14,7 +14,7 @@ module Jazari
 
       source_root File.expand_path("templates", __dir__)
 
-      desc "Copies the schema changes an already-installed host needs. PostgreSQL only."
+      desc "Copies schema changes into an already-installed PostgreSQL Rails host."
 
       def copy_migration
         migration_template "add_jazari_runbook_origin.rb", "db/migrate/add_jazari_runbook_origin.rb"

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nauman/jazari/protocol/v1/error.schema.json",
+  "title": "Jazari v1 error",
+  "type": "object",
+  "required": ["code"],
+  "properties": {
+    "code": {
+      "enum": [
+        "target_not_found", "invalid_runbook", "revision_conflict",
+        "item_not_found", "item_not_in_snapshot", "read_only_target",
+        "run_closed", "invalid_request", "storage_busy", "storage_failure"
+      ]
+    },
+    "detail": { "type": "string" }
+  },
+  "additionalProperties": false
+}

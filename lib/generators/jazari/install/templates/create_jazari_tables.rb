@@ -3,12 +3,18 @@
 # Host-adopted deliberately: jazari never auto-appends its migrations.
 class CreateJazariTables < ActiveRecord::Migration[7.1]
   def change
+    adapter = connection.adapter_name
+    unless %w[PostgreSQL SQLite].include?(adapter)
+      raise ActiveRecord::AdapterNotSpecified, "jazari supports PostgreSQL and SQLite, not #{adapter}"
+    end
+    postgres = adapter == "PostgreSQL"
+
     create_table :jazari_recipes do |t|
       t.string  :recipe_id, null: false
       t.integer :version, null: false, default: 1
       t.string  :topic, null: false
       t.text    :description, null: false, default: ""
-      t.jsonb   :checklist, null: false, default: []
+      postgres ? t.jsonb(:checklist, null: false, default: []) : t.json(:checklist, null: false, default: [])
       t.string  :run_policy, null: false, default: "unrestricted"
       t.timestamps
       t.index :recipe_id, unique: true
@@ -30,7 +36,7 @@ class CreateJazariTables < ActiveRecord::Migration[7.1]
       t.string  :recipe_id, null: false
       t.string  :topic, null: false
       t.text    :description, null: false, default: ""
-      t.jsonb   :checklist, null: false, default: []
+      postgres ? t.jsonb(:checklist, null: false, default: []) : t.json(:checklist, null: false, default: [])
       # Provenance, host-defined and nullable. A runbook that exists because a
       # backfill created it is a migration artifact; one that exists because an
       # operator edited it is a decision. Both differ from the canon, so
@@ -49,21 +55,32 @@ class CreateJazariTables < ActiveRecord::Migration[7.1]
       t.string     :subject_type
       t.bigint     :subject_id
       t.string     :actor_ref, null: false
-      t.timestamptz :started_at, null: false
+      postgres ? t.timestamptz(:started_at, null: false) : t.datetime(:started_at, null: false)
       t.date       :started_on, null: false
       t.string     :idempotency_policy, null: false, default: "unrestricted"
-      t.timestamptz :finished_at
+      postgres ? t.timestamptz(:finished_at) : t.datetime(:finished_at)
       t.string     :outcome
-      t.jsonb      :checklist_snapshot, null: false   # no default: every run carries its opening canon
-      t.jsonb      :ticks, null: false, default: []
-      t.jsonb      :evidence, null: false, default: []
+      if postgres
+        t.jsonb :checklist_snapshot, null: false
+        t.jsonb :ticks, null: false, default: []
+        t.jsonb :evidence, null: false, default: []
+      else
+        t.json :checklist_snapshot, null: false
+        t.json :ticks, null: false, default: []
+        t.json :evidence, null: false, default: []
+      end
       t.integer    :lock_version, null: false, default: 0
       t.timestamps
       t.index %i[recipe_id started_at]
       t.index %i[subject_type subject_id started_at]
       t.check_constraint "idempotency_policy IN ('unrestricted', 'once_per_calendar_day')",
         name: "jazari_runs_idempotency_policy_chk"
-      t.check_constraint "started_on = (started_at AT TIME ZONE 'UTC')::date",
+      utc_date_expression = if postgres
+        "started_on = (started_at AT TIME ZONE 'UTC')::date"
+      else
+        "started_on = date(started_at)"
+      end
+      t.check_constraint utc_date_expression,
         name: "jazari_runs_started_on_utc_chk"
       t.check_constraint "(subject_type IS NULL AND subject_id IS NULL) OR " \
                          "(subject_type IS NOT NULL AND subject_id IS NOT NULL)",

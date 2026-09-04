@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local-first CI gate (fleet doctrine: local-ci-doctrine).
+# Local-first CI gate.
 #
 # The gate runs HERE, before the push — not on a runner after it. A red push is
 # blocked rather than reported.
@@ -25,12 +25,12 @@ if [ -n "$changed" ] && ! echo "$changed" | grep -qvE '^(docs/|README|CHANGELOG|
   exit 0
 fi
 
-echo "pre-push: boundary + suite (postgres)"
+echo "pre-push: boundary + PostgreSQL/SQLite suites"
 
 if ! command -v pg_isready >/dev/null || ! pg_isready -q; then
   echo "pre-push: BLOCKED — PostgreSQL is not running."
-  echo "  This gem is Postgres-only; the suite exercises jsonb, timestamptz,"
-  echo "  four CHECK constraints, and a partial unique index."
+  echo "  The PostgreSQL suite exercises jsonb, timestamptz, CHECK constraints,"
+  echo "  and a partial unique index; SQLite runs in a separate process."
   echo "  Start it (e.g. brew services start postgresql@15) and push again."
   exit 1
 fi

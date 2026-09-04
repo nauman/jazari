@@ -1,0 +1,9 @@
+{
+  "schema": "jazari-conformance/v1",
+  "recipes": [{"id":"snapshot.v1","topic":"Snapshot","checklist":[{"id":"first","text":"First"}]}],
+  "steps": [
+    {"request":{"protocol":"jazari/v1","request_id":"open","action":"start","target":{"kind":"queue","key":"snapshot","recipe_id":"snapshot.v1"},"arguments":{"actor_ref":"agent:fixture"}},"expect":{"ok":true}},
+    {"setup":{"replace_recipe":{"id":"snapshot.v1","topic":"Changed","checklist":[{"id":"later","text":"Later"}]} }},
+    {"request":{"protocol":"jazari/v1","request_id":"tick","action":"tick","target":{"kind":"queue","key":"snapshot","recipe_id":"snapshot.v1"},"arguments":{"run_id":"$0.result.run_id","expected_revision":"$0.result.revision","item_id":"first","done":true}},"expect":{"ok":true,"result":{"ticks":[{"id":"first","done":true,"actor_ref":"agent:fixture"}]}}}
+  ]
+}

@@ -9,10 +9,10 @@ require_relative "../app/models/jazari/runbook"
 require_relative "../app/models/jazari/anchor"
 require_relative "../app/models/jazari/run"
 
-# PostgreSQL only. The gem's guarantees lean on Postgres semantics: jsonb,
-# timestamptz, CHECK constraints, and a partial unique index over a COALESCEd
-# polymorphic subject. Testing against anything else would prove a schema we do
-# not ship. Other adapters can be added later if someone asks for one.
+# This process proves PostgreSQL semantics: jsonb, timestamptz, CHECK
+# constraints, and a partial unique index over a COALESCEd polymorphic subject.
+# The standalone SQLite suite runs separately so neither adapter can leak
+# connection or model state into the other.
 DB = ENV.fetch("JAZARI_TEST_DATABASE", "jazari_test")
 
 ActiveRecord::Base.establish_connection(adapter: "postgresql", database: "postgres",

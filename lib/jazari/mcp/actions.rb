@@ -5,6 +5,8 @@
 # Checklist even when it is required on its own — which the standalone-require
 # test exists to catch, and did.
 require "jazari/checklist"
+require "jazari/operations"
+require "jazari/runs"
 
 module Jazari
   module Mcp
@@ -25,14 +27,29 @@ module Jazari
       #   :additive    — writes, but cannot destroy prior state
       #   :overwrite   — may replace an operator's content; annotate cautiously
       #   :destructive — removes something; gate it
+      REQUIRED_ARGUMENTS = {
+        "get" => [], "last_run" => [],
+        "set" => %i[expected_revision topic checklist],
+        "add_item" => %i[expected_revision text],
+        "remove_item" => %i[expected_revision item_id],
+        "check_item" => %i[expected_revision item_id done],
+        "reset" => %i[expected_revision confirm],
+        "start" => %i[actor_ref],
+        "tick" => %i[run_id expected_revision item_id done],
+        "evidence" => %i[run_id expected_revision kind value],
+        "finish" => %i[run_id expected_revision outcome]
+      }.freeze
+
       Action = Data.define(:name, :scope, :effect, :summary, :params, :confirm) do
         def read? = scope == :read
         def confirm? = confirm == true
+        def required = REQUIRED_ARGUMENTS.fetch(name)
         def to_h = { name: name, scope: scope, effect: effect, summary: summary,
                      params: params, confirm: confirm }
       end
 
       REVISION = { type: "string",
+                   minLength: 1,
                    description: "The revision from the read immediately before this call." }.freeze
       # JSON Schema patterns are ECMAScript, which has no `\A`/`\z`. Publishing
       # Ruby's source verbatim hands validators an anchor they may reject or,
@@ -40,7 +57,7 @@ module Jazari
       # else derived from ID_FORMAT, which stays the single source of truth.
       ID_PATTERN = Checklist::ID_FORMAT.source.sub('\\A', "^").sub('\\z', "$").freeze
 
-      ITEM_ID  = { type: "string", description: "Opaque checklist item id." }.freeze
+      ITEM_ID  = { type: "string", minLength: 1, description: "Opaque checklist item id." }.freeze
 
       # An `array` with no `items` is not a contract, it is a guess. A client
       # generating from that descriptor is free to infer `string[]`, send
@@ -75,8 +92,8 @@ module Jazari
                     description: "Full checklist; replaces the existing one. There is no row limit, " \
                                  "but the serialized checklist must be at most " \
                                  "#{Checklist::MAX_PAYLOAD} bytes." }.freeze
-      RUN_ID   = { type: "integer", description: "The run returned by start." }.freeze
-      ACTOR    = { type: "string", description: "Opaque identity of who is acting." }.freeze
+      RUN_ID   = { type: "integer", minimum: 1, description: "The run returned by start." }.freeze
+      ACTOR    = { type: "string", minLength: 1, description: "Opaque identity of who is acting." }.freeze
 
       ALL = [
         Action.new(name: "get", scope: :read, effect: :read, confirm: false,
@@ -88,13 +105,16 @@ module Jazari
         Action.new(name: "set", scope: :write, effect: :overwrite, confirm: false,
                    summary: "Replace this subject's procedure. Materialises an override on first use.",
                    params: { expected_revision: REVISION,
-                             topic: { type: "string", description: "Short title." },
-                             description: { type: "string", description: "Markdown body." },
+                             topic: { type: "string", minLength: 1, maxLength: Operations::MAX_TOPIC,
+                                      description: "Short title." },
+                             description: { type: "string", maxLength: Operations::MAX_DESCRIPTION,
+                                            description: "Markdown body." },
                              checklist: CHECKLIST }),
         Action.new(name: "add_item", scope: :write, effect: :additive, confirm: false,
                    summary: "Append one checklist step.",
                    params: { expected_revision: REVISION,
-                             text: { type: "string", description: "The step." },
+                             text: { type: "string", minLength: 1, maxLength: Checklist::MAX_TEXT,
+                                     description: "The step." },
                              required: { type: "boolean", description: "Whether the step is required. Default true." } }),
         Action.new(name: "remove_item", scope: :write, effect: :destructive, confirm: false,
                    summary: "Delete one checklist step.",
@@ -102,30 +122,35 @@ module Jazari
         Action.new(name: "check_item", scope: :write, effect: :additive, confirm: false,
                    summary: "Mark a step done or not done.",
                    params: { expected_revision: REVISION, item_id: ITEM_ID,
-                             done: { type: "boolean", description: "Default true." } }),
+                             done: { type: "boolean", description: "Whether the step is done." } }),
         Action.new(name: "reset", scope: :write, effect: :destructive, confirm: true,
                    summary: "Discard this subject's override and reveal the current canon.",
                    params: { expected_revision: REVISION,
-                             confirm: { type: "boolean", description: "Must be true — this discards operator content." } }),
+                             confirm: { type: "boolean", const: true,
+                                        description: "Must be true — this discards operator content." } }),
         Action.new(name: "start", scope: :write, effect: :additive, confirm: false,
                    summary: "Open a run. Under a once-per-day recipe this returns the existing run instead of erroring.",
                    params: { actor_ref: ACTOR }),
         Action.new(name: "tick", scope: :write, effect: :additive, confirm: false,
                    summary: "Record a step done within a run. Does not touch the subject's own checklist.",
                    params: { run_id: RUN_ID, expected_revision: REVISION, item_id: ITEM_ID,
-                             done: { type: "boolean", description: "Default true." },
+                             done: { type: "boolean", description: "Whether the step is done." },
                              actor_ref: ACTOR,
-                             note: { type: "string", description: "Optional free text." } }),
+                             note: { type: "string", maxLength: Checklist::MAX_TEXT,
+                                     description: "Optional free text." } }),
         Action.new(name: "evidence", scope: :write, effect: :additive, confirm: false,
                    summary: "Attach evidence to a run: output, url, sha, count, or note.",
                    params: { run_id: RUN_ID, expected_revision: REVISION, item_id: ITEM_ID,
-                             kind: { type: "string", description: "One of: output, url, sha, count, note." },
-                             value: { type: "string", description: "The evidence itself." },
+                             kind: { type: "string", enum: Runs::EVIDENCE_KINDS,
+                                     description: "The evidence kind." },
+                             value: { type: "string", maxLength: Runs::MAX_EVIDENCE,
+                                      description: "The evidence itself." },
                              actor_ref: ACTOR }),
         Action.new(name: "finish", scope: :write, effect: :additive, confirm: false,
                    summary: "Close a run with an outcome: completed, abandoned, or failed.",
                    params: { run_id: RUN_ID, expected_revision: REVISION,
-                             outcome: { type: "string", description: "completed | abandoned | failed" } })
+                             outcome: { type: "string", enum: %w[completed abandoned failed],
+                                        description: "How the run ended." } })
       ].freeze
 
       NAMES = ALL.map(&:name).freeze
@@ -160,6 +185,26 @@ module Jazari
           action.params.each { |key, spec| acc[key] ||= spec }
         end
         { enum: actions.map(&:name), properties: properties }
+      end
+
+      # A complete schema for a flat action-enum tool. Each action is its own
+      # closed variant, so a field that belongs to `tick` is not accidentally
+      # advertised as legal for `get` merely because both share one tool.
+      def input_schema(target_schema:, scope: :write)
+        {
+          type: "object",
+          oneOf: all(scope: scope).map do |action|
+            {
+              type: "object",
+              required: [ :action, :target, *action.required ],
+              properties: {
+                action: { const: action.name },
+                target: target_schema
+              }.merge(action.params),
+              additionalProperties: false
+            }
+          end
+        }
       end
 
       # Human-readable action list for a tool description or a paired skill.

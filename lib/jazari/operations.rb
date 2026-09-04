@@ -142,6 +142,8 @@ module Jazari
         create_custom(target, expected_revision, origin: origin) { |current| yield(current) }
       end
       resolve(target: target)
+    rescue ActiveRecord::StaleObjectError
+      raise RevisionConflict, "another writer changed this runbook first"
     end
     private_class_method :write
 

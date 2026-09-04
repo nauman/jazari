@@ -267,7 +267,7 @@ class OperationsTest < Minitest::Test
 
   # --- the payload bound ------------------------------------------------
   #
-  # 50 rows was inherited from a host, never measured. codex measured the live
+  # 50 rows was inherited from a host, never measured. A live measurement of the
   # board at 17,252 serialized bytes for 50 items, 278 characters per step.
   #
   # These tests do NOT pin that number — it came from live data this suite does

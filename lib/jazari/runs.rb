@@ -158,6 +158,8 @@ module Jazari
         record.save!
       end
       record
+    rescue ActiveRecord::StaleObjectError
+      raise RevisionConflict, "another writer changed this run first"
     end
     private_class_method :mutate
 

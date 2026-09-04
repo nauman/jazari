@@ -3,19 +3,28 @@
 require "bundler/gem_tasks"   # build / install / release
 require "rake/testtask"
 
-Rake::TestTask.new(:test) do |t|
+Rake::TestTask.new(:postgres_test) do |t|
   t.libs << "lib" << "test"
-  t.test_files = FileList["test/**/*_test.rb"]
+  t.test_files = FileList["test/**/*_test.rb"].exclude("test/standalone_sqlite_test.rb")
   t.warning = false
 end
+
+Rake::TestTask.new(:sqlite_test) do |t|
+  t.libs << "lib" << "test"
+  t.test_files = FileList["test/standalone_sqlite_test.rb"]
+  t.warning = false
+end
+
+desc "Run the PostgreSQL and SQLite suites in isolated processes"
+task test: %i[postgres_test sqlite_test]
 
 # ── the boundary check ────────────────────────────────────────────────────
 #
 # This gem is publishable only because it is product-agnostic — the same
 # property that made extracting it worth doing. Two assertions enforce that:
 #
-#   1. Every library file lives inside `module Jazari`. A file that does not is
-#      declaring something in the host's global namespace.
+#   1. Every library and executable file lives inside `module Jazari`. A file
+#      that does not is declaring something in the host's global namespace.
 #   2. The test suite names no subject beyond the gem and one dummy. Tests are
 #      where coupling to a real host model would first appear, because that is
 #      where subjects get instantiated.
@@ -35,15 +44,16 @@ TEST_ALLOWED = %w[
   # Ruby stdlib the suite legitimately drives: a loader that reads recipe files
   # cannot be tested without naming the filesystem.
   File Dir FileUtils YAML JSON Psych
+  Open3 StringIO Gem Pathname URI JSONSchemer
   ArgumentError StandardError RuntimeError NameError NoMethodError TypeError KeyError
-  String Symbol Integer Float Array Hash Struct Data Range Set Regexp
+  String Symbol Integer Float Array Hash Struct Data Range Set Regexp Class
 ].freeze
 
 desc "Fail if the gem or its suite couples to anything outside its own namespace"
 task :boundary do
   problems = []
 
-  Dir["lib/**/*.rb", "app/**/*.rb"].each do |file|
+  Dir["lib/**/*.rb", "app/**/*.rb", "exe/*"].each do |file|
     next if file.include?("generators/") # migration templates are host-facing by design
     problems << "#{file}: no `module Jazari`" unless File.read(file).include?("module Jazari")
   end

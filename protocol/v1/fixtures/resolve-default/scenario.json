@@ -1,0 +1,7 @@
+{
+  "schema": "jazari-conformance/v1",
+  "recipes": [{"id":"fixture.v1","topic":"Fixture","checklist":[{"id":"first","text":"First"}]}],
+  "steps": [
+    {"request":{"protocol":"jazari/v1","request_id":"resolve","action":"get","target":{"kind":"queue","key":"fixture","recipe_id":"fixture.v1"},"arguments":{}},"expect":{"ok":true,"result":{"state":"default","topic":"Fixture","progress":{"done":0,"total":1,"percent":0}}}}
+  ]
+}

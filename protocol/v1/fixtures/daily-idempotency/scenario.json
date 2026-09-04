@@ -1,0 +1,8 @@
+{
+  "schema": "jazari-conformance/v1",
+  "recipes": [{"id":"daily.v1","topic":"Daily","run_policy":"once_per_calendar_day","checklist":[{"id":"first","text":"First"}]}],
+  "steps": [
+    {"request":{"protocol":"jazari/v1","request_id":"open-1","action":"start","target":{"kind":"queue","key":"daily","recipe_id":"daily.v1"},"arguments":{"actor_ref":"agent:fixture"}},"expect":{"ok":true,"result":{"created":true,"idempotent_reuse":false}}},
+    {"request":{"protocol":"jazari/v1","request_id":"open-2","action":"start","target":{"kind":"queue","key":"daily","recipe_id":"daily.v1"},"arguments":{"actor_ref":"agent:fixture"}},"expect":{"ok":true,"result":{"created":false,"idempotent_reuse":true}},"equal":[["result.run_id",0,"result.run_id"]]}
+  ]
+}

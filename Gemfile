@@ -4,8 +4,9 @@ source "https://rubygems.org"
 gemspec
 
 group :development, :test do
-  gem "rake"
+  gem "json_schemer"
   gem "minitest"
-  gem "pg"          # Postgres-only: the suite runs the migration the gem ships
+  gem "pg"          # the PostgreSQL process runs the migration the gem ships
+  gem "rake"
   gem "rubocop-rails-omakase", require: false
 end

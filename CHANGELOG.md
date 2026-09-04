@@ -8,6 +8,33 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.8.0] - 2026-09-05
+
+### Added
+
+- An on-demand `jazari` executable backed by SQLite: JSON calls, recipe seeding,
+  capability discovery, and MCP stdio with no daemon or network listener.
+- The versioned `jazari/v1` request, response, error, and capability JSON
+  Schemas, plus backend-neutral conformance fixtures for revisions, daily
+  idempotency, snapshots, attribution, evidence, operator edits, and closed
+  runs.
+
+### Changed
+
+- The shipped migration now preserves its constraints on PostgreSQL while
+  emitting equivalent SQLite types and UTC-date enforcement.
+- Run and runbook optimistic-lock races map to `revision_conflict` on both
+  adapters.
+- JSON and MCP schemas now close each action independently, so fields accepted
+  by a published schema are accepted by the matching runtime action.
+
+### Fixed
+
+- Standalone schema creation is atomic under concurrent first use, and local
+  anchor targets cannot register or overwrite a Rails host's anchor scopes.
+- The dispatcher and MCP stdio server own their load-time dependencies and keep
+  internal failures inside the closed `jazari/v1` error envelope.
+
 ## [0.7.0] - 2026-08-30
 
 ### Changed

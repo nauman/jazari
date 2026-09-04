@@ -10,9 +10,9 @@ Gem::Specification.new do |spec|
   # still attributing the work.
   spec.authors     = [ "Nauman Tariq" ]
   spec.email       = [ "90499+nauman@users.noreply.github.com" ]
-  spec.homepage    = "https://github.com/nauman/jazari"
+  spec.homepage    = "https://nauman.github.io/jazari/"
   spec.metadata    = {
-    "homepage_uri"    => "https://github.com/nauman/jazari",
+    "homepage_uri"    => "https://nauman.github.io/jazari/",
     "source_code_uri" => "https://github.com/nauman/jazari",
     "changelog_uri"   => "https://github.com/nauman/jazari/blob/main/CHANGELOG.md"
   }
@@ -33,6 +33,8 @@ Gem::Specification.new do |spec|
     "app/**/*.rb",
     "config/**/*.rb",
     "db/**/*.rb",
+    "exe/*",
+    "protocol/**/*.json",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
@@ -40,4 +42,8 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "activerecord", ">= 7.1"
   spec.add_dependency "activesupport", ">= 7.1"
+  spec.add_dependency "sqlite3", ">= 2.1"
+
+  spec.bindir = "exe"
+  spec.executables = [ "jazari" ]
 end

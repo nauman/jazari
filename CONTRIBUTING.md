@@ -4,23 +4,24 @@ Thanks for looking.
 
 ## Running the suite
 
-PostgreSQL is required — the gem's guarantees rely on `jsonb`, `timestamptz`,
-CHECK constraints, and a partial unique index, so a portable in-memory adapter
-would prove a schema we do not ship.
+PostgreSQL is required for the Rails-host suite; it proves `jsonb`,
+`timestamptz`, CHECK constraints, and the partial unique index. A second,
+isolated SQLite process proves the standalone schema and the same JSON
+conformance fixtures.
 
 ```bash
 bundle install
 bundle exec rake        # boundary check, then tests
 ```
 
-The suite creates and migrates `jazari_test` itself. Override with
-`JAZARI_TEST_DATABASE`.
+The PostgreSQL suite creates and migrates `jazari_test` itself. Override with
+`JAZARI_TEST_DATABASE`; the SQLite suite owns temporary database files.
 
 ## The boundary check
 
 `rake boundary` runs before the tests and fails if:
 
-- a file under `lib/` or `app/` is not inside `module Jazari`, or
+- a file under `lib/`, `app/`, or `exe/` is not inside `module Jazari`, or
 - the test suite names a constant outside the gem, Ruby core, ActiveRecord,
   Minitest, or the single `DummySubject` fixture.
 

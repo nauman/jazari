@@ -1,0 +1,7 @@
+{
+  "schema": "jazari-conformance/v1",
+  "recipes": [{"id":"fixture.v1","topic":"Fixture","checklist":[{"id":"first","text":"First"}]}],
+  "steps": [
+    {"request":{"protocol":"jazari/v1","request_id":"stale","action":"set","target":{"kind":"anchor","scope_type":"local","scope_id":1,"key":"one","recipe_id":"fixture.v1"},"arguments":{"expected_revision":"default:stale","topic":"Changed","description":"","checklist":[]}},"expect":{"ok":false,"error":{"code":"revision_conflict"}}}
+  ]
+}

@@ -12,8 +12,8 @@ module Jazari
     #
     # 50 was inherited from a host that already had it, never benchmarked. A
     # 50-item procedure measured live serializes to 17,252 bytes at 278
-    # characters per step (codex, on the session-anchor board; the suite's
-    # synthetic equivalent is 16,691, since real ids and text are not uniform), so the row cap was rejecting documents four times smaller than
+    # characters per step (the suite's synthetic equivalent is 16,691, since
+    # real ids and text are not uniform), so the row cap was rejecting documents four times smaller than
     # what actually hurts — and would have accepted 50 steps of 500 characters,
     # which is nearly twice as large again.
     #

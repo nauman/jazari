@@ -10,6 +10,7 @@ The README is the pitch. These are the working documents.
 | [04 · Runs and evidence](04-runs.md) | You want "did last night's run complete?" to be a query |
 | [05 · MCP](05-mcp.md) | Exposing procedures to an agent |
 | [06 · Migrating an existing checklist](06-migrating.md) | You already have a runbook table and live data |
+| [07 · Standalone](07-standalone.md) | Running Jazari locally with SQLite, JSON, or MCP stdio |
 
 These guides are the public usage documentation, published through Kuickr at
 <https://kuickr.co/jazari/guide>. The repository's `docs/` directory holds the

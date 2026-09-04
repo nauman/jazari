@@ -1,0 +1,10 @@
+{
+  "schema": "jazari-conformance/v1",
+  "recipes": [{"id":"operator.v1","topic":"Seeded","checklist":[]}],
+  "steps": [
+    {"request":{"protocol":"jazari/v1","request_id":"default","action":"get","target":{"kind":"anchor","scope_type":"local","scope_id":1,"key":"operator","recipe_id":"operator.v1"},"arguments":{}},"expect":{"ok":true,"result":{"state":"default","topic":"Seeded"}}},
+    {"request":{"protocol":"jazari/v1","request_id":"edit","action":"set","target":{"kind":"anchor","scope_type":"local","scope_id":1,"key":"operator","recipe_id":"operator.v1"},"arguments":{"expected_revision":"$0.result.revision","topic":"Operator wording","description":"","checklist":[]}},"expect":{"ok":true,"result":{"state":"custom","topic":"Operator wording"}}},
+    {"setup":{"replace_recipe":{"id":"operator.v1","topic":"New seed","checklist":[]}}},
+    {"request":{"protocol":"jazari/v1","request_id":"get","action":"get","target":{"kind":"anchor","scope_type":"local","scope_id":1,"key":"operator","recipe_id":"operator.v1"},"arguments":{}},"expect":{"ok":true,"result":{"state":"custom","topic":"Operator wording"}}}
+  ]
+}

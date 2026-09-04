@@ -1,0 +1,9 @@
+{
+  "schema": "jazari-conformance/v1",
+  "recipes": [{"id":"closed.v1","topic":"Closed","checklist":[{"id":"first","text":"First"}]}],
+  "steps": [
+    {"request":{"protocol":"jazari/v1","request_id":"open","action":"start","target":{"kind":"queue","key":"closed","recipe_id":"closed.v1"},"arguments":{"actor_ref":"agent:fixture"}},"expect":{"ok":true}},
+    {"request":{"protocol":"jazari/v1","request_id":"finish","action":"finish","target":{"kind":"queue","key":"closed","recipe_id":"closed.v1"},"arguments":{"run_id":"$0.result.run_id","expected_revision":"$0.result.revision","outcome":"completed"}},"expect":{"ok":true,"result":{"open":false,"outcome":"completed"}}},
+    {"request":{"protocol":"jazari/v1","request_id":"late","action":"tick","target":{"kind":"queue","key":"closed","recipe_id":"closed.v1"},"arguments":{"run_id":"$0.result.run_id","expected_revision":"$1.result.revision","item_id":"first","done":true}},"expect":{"ok":false,"error":{"code":"run_closed"}}}
+  ]
+}

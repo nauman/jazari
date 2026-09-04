@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nauman/jazari/protocol/v1/capability.schema.json",
+  "title": "Jazari v1 capabilities",
+  "type": "object",
+  "required": ["protocol", "storage", "transports", "features"],
+  "properties": {
+    "protocol": { "const": "jazari/v1" },
+    "storage": { "enum": ["postgresql", "sqlite"] },
+    "transports": {
+      "type": "array",
+      "items": { "enum": ["ruby", "cli", "mcp-stdio"] },
+      "uniqueItems": true
+    },
+    "features": {
+      "type": "array",
+      "items": { "enum": ["recipes", "runbooks", "runs", "evidence"] },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

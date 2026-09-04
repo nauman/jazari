@@ -1,0 +1,8 @@
+{
+  "schema": "jazari-conformance/v1",
+  "recipes": [{"id":"evidence.v1","topic":"Evidence","checklist":[{"id":"first","text":"First"}]}],
+  "steps": [
+    {"request":{"protocol":"jazari/v1","request_id":"open","action":"start","target":{"kind":"queue","key":"evidence","recipe_id":"evidence.v1"},"arguments":{"actor_ref":"agent:fixture"}},"expect":{"ok":true}},
+    {"request":{"protocol":"jazari/v1","request_id":"evidence","action":"evidence","target":{"kind":"queue","key":"evidence","recipe_id":"evidence.v1"},"arguments":{"run_id":"$0.result.run_id","expected_revision":"$0.result.revision","item_id":"first","kind":"count","value":"4211"}},"expect":{"ok":true,"result":{"evidence":[{"item_id":"first","kind":"count","value":"4211","actor_ref":"agent:fixture"}]}}}
+  ]
+}

@@ -1,0 +1,96 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "json"
+require "optparse"
+require "jazari/standalone"
+
+module Jazari
+  module Standalone
+    class CLI
+      def initialize(argv, input: $stdin, output: $stdout, error: $stderr)
+        @argv = argv.dup
+        @input = input
+        @output = output
+        @error = error
+      end
+
+      def run
+        command = @argv.shift
+        case command
+        when "capabilities" then capabilities
+        when "call" then call
+        when "recipes" then recipes
+        when "mcp" then mcp
+        else usage!("unknown command #{command.inspect}")
+        end
+      rescue OptionParser::ParseError, ArgumentError, Errno::ENOENT, JSON::ParserError => exception
+        @error.puts("jazari: #{exception.message}")
+        2
+      rescue Jazari::Error => exception
+        @error.puts("jazari: #{exception.code}: #{exception.message}")
+        1
+      rescue ActiveRecord::ActiveRecordError, RuntimeError => exception
+        @error.puts("jazari: #{exception.message}")
+        1
+      end
+
+      private
+
+      def capabilities
+        options = parse_common!
+        @output.puts(JSON.pretty_generate(app(options).capabilities))
+        0
+      end
+
+      def call
+        options = parse_common!({ request: "-" }) do |parser, values|
+          parser.on("--request PATH", "JSON request file, or - for stdin") { |value| values[:request] = value }
+        end
+        body = options[:request] == "-" ? @input.read : File.read(options[:request])
+        response = app(options).call(JSON.parse(body))
+        @output.puts(JSON.pretty_generate(response))
+        response["ok"] ? 0 : 1
+      end
+
+      def recipes
+        usage!("expected `recipes seed PATH`") unless @argv.shift == "seed"
+        options = parse_common!(positionals: 1)
+        path = @argv.shift or usage!("recipe file or directory is required")
+        app(options)
+        records = RecipeRegistry.seed!(RecipeFiles.load(path))
+        @output.puts(JSON.pretty_generate(protocol: Protocol::Dispatcher::VERSION, seeded: records.length))
+        0
+      end
+
+      def mcp
+        usage!("expected `mcp stdio`") unless @argv.shift == "stdio"
+        options = parse_common!
+        Mcp::StdioServer.new(dispatcher: app(options).dispatcher).serve(input: @input, output: @output)
+      end
+
+      def parse_common!(defaults = {}, positionals: 0)
+        options = { database: ENV["JAZARI_DATABASE"], recipes: [] }.merge(defaults)
+        parser = OptionParser.new do |flags|
+          flags.on("--database PATH", "SQLite database path") { |value| options[:database] = value }
+          flags.on("--recipes PATH", "Seed recipes from a file or directory") { |value| options[:recipes] << value }
+          flags.on("--json", "Emit JSON (machine commands already do)") {}
+          yield flags, options if block_given?
+        end
+        parser.parse!(@argv)
+        raise ArgumentError, "--database PATH or JAZARI_DATABASE is required" if options[:database].to_s.empty?
+        extras = @argv.drop(positionals)
+        raise OptionParser::InvalidArgument, extras.join(" ") if extras.any?
+        options
+      end
+
+      def app(options) = App.new(database: options.fetch(:database), recipes: options.fetch(:recipes))
+
+      def usage!(message)
+        raise ArgumentError, "#{message}\nusage: jazari capabilities|call|recipes seed|mcp stdio --database PATH"
+      end
+    end
+  end
+end
+
+exit Jazari::Standalone::CLI.new(ARGV).run

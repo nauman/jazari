@@ -14,7 +14,7 @@ module Jazari
 
       source_root File.expand_path("templates", __dir__)
 
-      desc "Copies the jazari migration into the host. PostgreSQL only."
+      desc "Copies the jazari migration into a PostgreSQL Rails host."
 
       def copy_migration
         migration_template "create_jazari_tables.rb", "db/migrate/create_jazari_tables.rb"
@@ -27,8 +27,9 @@ module Jazari
         say "  2. Seed your own recipes — the gem ships none by design."
         say "  3. Jazari.configure { |c| c.anchor_scopes = { ... } } at boot."
         say ""
-        say "PostgreSQL is required: jsonb, timestamptz, CHECK constraints, and a"
-        say "partial unique index over a COALESCEd polymorphic subject."
+        say "Rails hosts use PostgreSQL: jsonb, timestamptz, CHECK constraints, and a"
+        say "partial unique index over a COALESCEd polymorphic subject. The standalone"
+        say "executable manages its own SQLite schema instead."
         say ""
       end
     end

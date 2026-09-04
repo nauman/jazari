@@ -34,8 +34,9 @@ bundle exec rake        # boundary check, then the suite — must be green
 gem build jazari.gemspec
 ```
 
-PostgreSQL must be running. The suite exercises the migration the gem ships,
-so a green run means the schema is real, not approximated.
+PostgreSQL must be running. The gate exercises the migration the gem ships in
+isolated PostgreSQL and SQLite processes, so a green run means both supported
+schemas are real, not approximated.
 
 **Read the boundary output.** It is the check that stops a host product name
 leaving in a published package, and release is the one irreversible moment.

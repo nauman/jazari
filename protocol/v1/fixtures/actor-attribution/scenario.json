@@ -1,0 +1,8 @@
+{
+  "schema": "jazari-conformance/v1",
+  "recipes": [{"id":"actor.v1","topic":"Actor","checklist":[{"id":"first","text":"First"}]}],
+  "steps": [
+    {"request":{"protocol":"jazari/v1","request_id":"open","action":"start","target":{"kind":"queue","key":"actor","recipe_id":"actor.v1"},"arguments":{"actor_ref":"agent:fixture"}},"expect":{"ok":true}},
+    {"request":{"protocol":"jazari/v1","request_id":"tick","action":"tick","target":{"kind":"queue","key":"actor","recipe_id":"actor.v1"},"arguments":{"run_id":"$0.result.run_id","expected_revision":"$0.result.revision","item_id":"first","done":true}},"expect":{"ok":true,"result":{"ticks":[{"actor_ref":"agent:fixture"}]}}}
+  ]
+}

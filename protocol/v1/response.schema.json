@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nauman/jazari/protocol/v1/response.schema.json",
+  "title": "Jazari v1 response",
+  "$defs": {
+    "checklistItem": {
+      "type": "object",
+      "required": ["id", "text", "done", "required"],
+      "properties": {
+        "id": { "type": "string" }, "text": { "type": "string" },
+        "done": { "type": "boolean" }, "required": { "type": "boolean" },
+        "post_snapshot": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "lastRun": {
+      "type": ["object", "null"],
+      "properties": {
+        "id": { "type": "integer" },
+        "outcome": { "type": ["string", "null"] },
+        "started_at": { "type": "string" },
+        "finished_at": { "type": ["string", "null"] },
+        "open": { "type": "boolean" }
+      },
+      "required": ["id", "outcome", "started_at", "finished_at", "open"],
+      "additionalProperties": false
+    },
+    "resolved": {
+      "type": "object",
+      "required": ["state", "revision", "topic", "description", "checklist", "progress", "target_reference", "recipe", "last_run", "origin"],
+      "properties": {
+        "state": { "enum": ["default", "custom"] },
+        "revision": { "type": "string" },
+        "topic": { "type": "string" }, "description": { "type": "string" },
+        "checklist": { "type": "array", "items": { "$ref": "#/$defs/checklistItem" } },
+        "progress": {
+          "type": "object", "required": ["done", "total", "percent"],
+          "properties": { "done": { "type": "integer" }, "total": { "type": "integer" }, "percent": { "type": "integer" } },
+          "additionalProperties": false
+        },
+        "target_reference": { "type": "object" },
+        "recipe": {
+          "type": "object", "required": ["id", "version", "digest"],
+          "properties": { "id": { "type": "string" }, "version": { "type": "integer" }, "digest": { "type": "string" } },
+          "additionalProperties": false
+        },
+        "last_run": { "$ref": "#/$defs/lastRun" },
+        "origin": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "run": {
+      "type": "object",
+      "required": ["run_id", "revision", "recipe", "started_at", "started_on", "finished_at", "outcome", "open", "ticks", "evidence"],
+      "properties": {
+        "run_id": { "type": "integer" }, "revision": { "type": "string" },
+        "recipe": { "type": "string" }, "started_at": { "type": "string" },
+        "started_on": { "type": "string", "format": "date" },
+        "finished_at": { "type": ["string", "null"] },
+        "outcome": { "type": ["string", "null"] }, "open": { "type": "boolean" },
+        "ticks": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["id", "done", "at", "actor_ref", "note"],
+            "properties": {
+              "id": { "type": "string" }, "done": { "type": "boolean" },
+              "at": { "type": "string" }, "actor_ref": { "type": "string" },
+              "note": { "type": ["string", "null"] }, "post_snapshot": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["item_id", "kind", "value", "at", "actor_ref"],
+            "properties": {
+              "item_id": { "type": ["string", "null"] },
+              "kind": { "enum": ["output", "url", "sha", "count", "note"] },
+              "value": { "type": "string", "maxLength": 2000 },
+              "at": { "type": "string" }, "actor_ref": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "created": { "type": "boolean" }, "idempotent_reuse": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["protocol", "request_id", "action", "ok", "result"],
+      "properties": {
+        "protocol": { "const": "jazari/v1" }, "request_id": { "type": "string" },
+        "action": { "type": "string" }, "ok": { "const": true },
+        "result": {
+          "oneOf": [
+            { "$ref": "capability.schema.json" },
+            { "$ref": "#/$defs/resolved" },
+            { "$ref": "#/$defs/run" },
+            {
+              "type": "object", "required": ["last_run"],
+              "properties": { "last_run": { "type": "null" } },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": ["protocol", "request_id", "action", "ok", "error"],
+      "properties": {
+        "protocol": { "const": "jazari/v1" }, "request_id": { "type": "string" },
+        "action": { "type": "string" }, "ok": { "const": false },
+        "error": { "$ref": "error.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 # 05 · MCP
 
 Procedures are most useful when an agent can call them by name. Jazari ships a
-transport-neutral handler; **you own the tool.**
+transport-neutral handler for embedded hosts and an on-demand MCP stdio server
+for its standalone SQLite database.
 
 ```ruby
 require "jazari"
@@ -59,11 +60,16 @@ validates and scopes against the same list, and a test asserts it can dispatch
 every declared action — so the schema you publish and the behaviour the gem
 implements cannot drift apart.
 
-## Why the gem does not ship a tool
+## Embedded hosts own their tool
 
 Tool identity is product identity. Your tool has your name, your subject
 vocabulary, and your permissions — `myapp_runbook`, not `jazari_runbook`. Two
 apps sharing this handler still present two different tools.
+
+Standalone mode is the deliberate exception: `jazari mcp stdio --database PATH`
+exposes one generic `jazari` tool over the process's stdin/stdout. It opens no
+network listener and exits when the client closes stdin. Use `--recipes PATH`
+to seed recipe files without overwriting rows an operator already changed.
 
 The handler never sees an actor object. **You authorize, construct the target,
 and pass an opaque `actor_ref`**, then call. That ordering is the whole security
@@ -112,6 +118,12 @@ advisory.
 Never a message. A message can disclose a record, a query, or whether a target
 exists. `target_not_found` covers unknown, unauthorized, and deleted alike, so
 guessing reveals nothing.
+
+The closed domain set is `target_not_found`, `invalid_runbook`,
+`revision_conflict`, `item_not_found`, `item_not_in_snapshot`,
+`read_only_target`, and `run_closed`. The standalone JSON envelope additionally
+uses `invalid_request`, `storage_busy`, and `storage_failure` at its transport
+and storage boundary.
 
 ## Two things worth annotating
 
