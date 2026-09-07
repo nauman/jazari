@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jazari — operating procedures you can call</title>
-<meta name="description" content="Recipes as data, per-subject runbooks, named queues, and per-run evidence for Rails. So &quot;did last night's run actually complete?&quot; is a query, not a guess.">
+<meta name="description" content="Track operating procedures with recipes, runbooks, and per-run evidence. Run locally with SQLite, JSON and MCP stdio, or embed in Rails with PostgreSQL.">
 <meta property="og:title" content="Jazari">
-<meta property="og:description" content="Operating procedures you can call, instead of documents you hope someone reads.">
+<meta property="og:description" content="Operating procedures you can call. Local SQLite storage, a versioned JSON interface, MCP stdio, and Rails integration.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
 <style>
 :root{
@@ -39,6 +39,7 @@ html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--ui);
   -webkit-font-smoothing:antialiased;overflow-x:hidden}
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.split > *{min-width:0}
 .narrow{max-width:760px}
 h1,h2,h3{margin:0;font-weight:400}
 h1{font-family:var(--disp);font-size:clamp(40px,8vw,86px);line-height:.98;letter-spacing:-.02em}
@@ -199,6 +200,7 @@ footer a{color:var(--gold)}
     <a class="brand" href="#top"><i></i>jazari</a>
     <a class="l" href="#origin">Origin</a>
     <a class="l" href="#layers">Layers</a>
+    <a class="l" href="#standalone">CLI &amp; JSON</a>
     <a class="l" href="#use">Usage</a>
     <a class="l" href="#runs">Runs</a>
     <a class="l" href="#mcp">MCP</a>
@@ -219,10 +221,13 @@ footer a{color:var(--gold)}
       <strong>who or what acted</strong> — so <em>“did last night’s run actually complete?”</em>
       is a query.
     </p>
+    <p style="margin-top:18px;max-width:64ch">New in v0.8.0: run locally with a SQLite file,
+      send and receive JSON, or connect an MCP client over stdio. No PostgreSQL server
+      or Rails application needed. Ruby 3.2+ is required.</p>
     <div class="cta">
       <a class="btn p" href="https://rubygems.org/gems/jazari">gem install jazari</a>
       <a class="btn" href="https://kuickr.co/jazari/guide">Read the guides</a>
-      <a class="btn" href="#use">See the code</a>
+      <a class="btn" href="#standalone">Try the CLI</a>
     </div>
 
     <div class="stats rv">
@@ -391,11 +396,55 @@ footer a{color:var(--gold)}
   </div>
 </section>
 
+<!-- ══ standalone SQLite + JSON ════════════════════════════════════════ -->
+<section class="band" id="standalone">
+  <div class="wrap">
+    <p class="eyebrow rv">Standalone · v0.8.0</p>
+    <h2 class="rv" style="margin-top:10px">A local file. A JSON conversation.</h2>
+    <p class="lede rv" style="margin-top:16px">SQLite stores your procedure state.
+      The versioned <span class="mono">jazari/v1</span> interface lets any language
+      call it. Jazari starts when you call it and exits when the work is recorded.</p>
+
+    <div class="rv" style="margin-top:30px">
+      <h3 style="margin-bottom:12px">1 · Install and discover</h3>
+      <p>With Ruby 3.2+ installed, these commands create a local SQLite database and
+        report the available features. No database server, daemon, or network listener.</p>
+      <pre><code>gem install jazari -v '~&gt; 0.8.0'
+jazari capabilities --database .jazari/jazari.sqlite3</code></pre>
+    </div>
+
+    <div class="rv" style="margin-top:30px">
+      <h3 style="margin-bottom:12px">2 · Send JSON, receive JSON</h3>
+      <p>This first request works without seeding a recipe. Send a JSON file with
+        <span class="mono">--request request.json</span>, or pipe a request through stdin:</p>
+      <pre><code>printf '%s\n' '{"protocol":"jazari/v1","request_id":"hello","action":"capabilities","arguments":{}}' \
+  | jazari call --database .jazari/jazari.sqlite3 --request -</code></pre>
+      <p style="margin-top:14px">The response identifies SQLite storage and the CLI and
+        MCP stdio transports. Recipe, runbook, run, and evidence operations use the same
+        interface, with revision checks on writes and structured error codes.</p>
+      <p><a href="https://github.com/nauman/jazari/tree/v0.8.0/protocol/v1">Read the JSON schemas and conformance fixtures</a>.</p>
+    </div>
+
+    <div class="rv" style="margin-top:30px">
+      <h3 style="margin-bottom:12px">3 · Load your procedures or connect an agent</h3>
+      <p>Seed your YAML or JSON recipe files. Existing recipes keep the operator's edits.</p>
+      <pre><code>jazari recipes seed config/recipes --database .jazari/jazari.sqlite3</code></pre>
+      <p style="margin-top:18px">To connect an MCP client, configure it to launch this command
+        with an absolute database path. The server exposes one <span class="mono">jazari</span>
+        tool and speaks JSON-RPC over stdio.</p>
+      <pre><code>jazari mcp stdio --database /absolute/path/to/jazari.sqlite3</code></pre>
+      <p style="margin-top:14px">Runs retain snapshots, actor attribution, and evidence across
+        calls. Your calling application handles authorization and executes the procedure.</p>
+      <a class="btn" href="https://kuickr.co/jazari/guide/07-standalone.md">Standalone guide</a>
+    </div>
+  </div>
+</section>
+
 <!-- ══ code, tabbed ══════════════════════════════════════════════════════ -->
 <section class="band alt" id="use">
   <div class="wrap">
-    <p class="eyebrow rv">In use</p>
-    <h2 class="rv" style="margin-top:10px">Thirty seconds</h2>
+    <p class="eyebrow rv">Embedded Ruby &amp; Rails</p>
+    <h2 class="rv" style="margin-top:10px">Inside your application</h2>
     <p class="lede rv" style="margin-top:16px">Seed a procedure. Address it by name. Open a run,
       work it, attach what you saw.</p>
 
@@ -465,7 +514,7 @@ run    = result[:run]
 <span class="o">#=&gt; { id: 4412, outcome: "completed", open: false,</span>
 <span class="o">#     started_at: 2026-08-10 03:00:04 UTC, finished_at: ... }</span></pre></div>
 
-      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.5"</span>
+      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.8.0"</span>
 
 bin/rails generate jazari:install
 bin/rails db:migrate
