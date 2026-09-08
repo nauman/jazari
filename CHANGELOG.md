@@ -8,6 +8,19 @@ codes, the resolved-value shape, how revisions are computed, and the schema the
 generator emits — changes to any of those are breaking even when the method
 signatures do not move.
 
+## [0.8.1] - 2026-09-09
+
+### Fixed
+
+- Fresh installs no longer resolve JSON 3 alongside an Active Support version
+  that still passes parser options positionally, preventing startup and test
+  failures before Jazari can open a database.
+
+### Changed
+
+- CI now verifies Ruby 3.2, 3.4, and 4.0. Release builds use Ruby 4.0 while
+  Ruby 3.2 remains the supported minimum.
+
 ## [0.8.0] - 2026-09-05
 
 ### Added

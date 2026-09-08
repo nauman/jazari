@@ -233,8 +233,8 @@ footer a{color:var(--gold)}
     <div class="stats rv">
       <div class="stat"><b data-count="4">0</b><span>layers</span></div>
       <div class="stat"><b data-count="4">0</b><span>tables</span></div>
-      <div class="stat"><b data-count="133">0</b><span>tests</span></div>
-      <div class="stat"><b data-count="3">0</b><span>dependencies</span></div>
+      <div class="stat"><b data-count="135">0</b><span>tests</span></div>
+      <div class="stat"><b data-count="4">0</b><span>dependencies</span></div>
     </div>
 
     <div class="note rv" style="max-width:74ch;margin-top:34px">
@@ -399,7 +399,7 @@ footer a{color:var(--gold)}
 <!-- ══ standalone SQLite + JSON ════════════════════════════════════════ -->
 <section class="band" id="standalone">
   <div class="wrap">
-    <p class="eyebrow rv">Standalone · v0.8.0</p>
+    <p class="eyebrow rv">Standalone · v0.8.1</p>
     <h2 class="rv" style="margin-top:10px">A local file. A JSON conversation.</h2>
     <p class="lede rv" style="margin-top:16px">SQLite stores your procedure state.
       The versioned <span class="mono">jazari/v1</span> interface lets any language
@@ -409,7 +409,7 @@ footer a{color:var(--gold)}
       <h3 style="margin-bottom:12px">1 · Install and discover</h3>
       <p>With Ruby 3.2+ installed, these commands create a local SQLite database and
         report the available features. No database server, daemon, or network listener.</p>
-      <pre><code>gem install jazari -v '~&gt; 0.8.0'
+      <pre><code>gem install jazari -v '~&gt; 0.8.1'
 jazari capabilities --database .jazari/jazari.sqlite3</code></pre>
     </div>
 
@@ -422,7 +422,7 @@ jazari capabilities --database .jazari/jazari.sqlite3</code></pre>
       <p style="margin-top:14px">The response identifies SQLite storage and the CLI and
         MCP stdio transports. Recipe, runbook, run, and evidence operations use the same
         interface, with revision checks on writes and structured error codes.</p>
-      <p><a href="https://github.com/nauman/jazari/tree/v0.8.0/protocol/v1">Read the JSON schemas and conformance fixtures</a>.</p>
+      <p><a href="https://github.com/nauman/jazari/tree/v0.8.1/protocol/v1">Read the JSON schemas and conformance fixtures</a>.</p>
     </div>
 
     <div class="rv" style="margin-top:30px">
@@ -514,7 +514,7 @@ run    = result[:run]
 <span class="o">#=&gt; { id: 4412, outcome: "completed", open: false,</span>
 <span class="o">#     started_at: 2026-08-10 03:00:04 UTC, finished_at: ... }</span></pre></div>
 
-      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.8.0"</span>
+      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.8.1"</span>
 
 bin/rails generate jazari:install
 bin/rails db:migrate
