@@ -39,7 +39,7 @@ task test: %i[postgres_test sqlite_test]
 # creep in.
 TEST_ALLOWED = %w[
   Jazari DummySubject HostAnchor
-  ActiveRecord Minitest
+  ActiveRecord ActiveSupport Minitest
   Time Date Object ENV DB
   # Ruby stdlib the suite legitimately drives: a loader that reads recipe files
   # cannot be tested without naming the filesystem.

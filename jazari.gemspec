@@ -42,6 +42,9 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "activerecord", ">= 7.1"
   spec.add_dependency "activesupport", ">= 7.1"
+  # Temporary until https://github.com/rails/rails/issues/58685:
+  # Active Support passes parser options positionally; JSON 3 accepts them as keywords.
+  spec.add_dependency "json", "< 3"
   spec.add_dependency "sqlite3", ">= 2.1"
 
   spec.bindir = "exe"
