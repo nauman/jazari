@@ -13,7 +13,9 @@ on-demand standalone CLI with SQLite.
 
 ## Guides
 
-The README is the pitch; the public [Kuickr guide](https://kuickr.co/jazari/guide)
+[Jazari website](https://jazari.kuickr.co/)
+
+The README is the pitch; the public [Kuickr guide](https://jazari.kuickr.co/README.md)
 is the operating manual. Its source lives in [`guide/`](guide/), including
 [concepts](guide/01-concepts.md) (start here: one word means something
 different than you expect), [adoption](guide/02-adoption.md),

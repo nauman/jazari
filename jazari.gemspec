@@ -10,9 +10,9 @@ Gem::Specification.new do |spec|
   # still attributing the work.
   spec.authors     = [ "Nauman Tariq" ]
   spec.email       = [ "90499+nauman@users.noreply.github.com" ]
-  spec.homepage    = "https://nauman.github.io/jazari/"
+  spec.homepage    = "https://jazari.kuickr.co/"
   spec.metadata    = {
-    "homepage_uri"    => "https://nauman.github.io/jazari/",
+    "homepage_uri"    => "https://jazari.kuickr.co/",
     "source_code_uri" => "https://github.com/nauman/jazari",
     "changelog_uri"   => "https://github.com/nauman/jazari/blob/main/CHANGELOG.md"
   }
