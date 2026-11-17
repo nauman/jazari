@@ -1,464 +1,155 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" class="no-js" data-theme="light">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Jazari — operating procedures you can call</title>
-<meta name="description" content="Track operating procedures with recipes, runbooks, and per-run evidence. Run locally with SQLite, JSON and MCP stdio, or embed in Rails with PostgreSQL.">
+<meta name="description" content="Track executable checklists with recipes, runbooks, immutable run snapshots, and per-item evidence. Run locally with SQLite, JSON and MCP stdio, or embed in Rails with PostgreSQL.">
 <link rel="canonical" href="https://jazari.kuickr.co/">
 <meta property="og:url" content="https://jazari.kuickr.co/">
 <meta property="og:title" content="Jazari">
 <meta property="og:description" content="Operating procedures you can call. Local SQLite storage, a versioned JSON interface, MCP stdio, and Rails integration.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%99%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600&amp;family=IBM+Plex+Sans:wght@400;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&amp;display=swap" rel="stylesheet">
+<script>(function(r){r.classList.replace('no-js','js');try{var t=localStorage.getItem('jazari-theme'),l=localStorage.getItem('jazari-layout');if(t==='dark'||t==='light')r.dataset.theme=t;r.dataset.layout=l==='boxed'?'boxed':'unboxed'}catch(e){r.dataset.layout='unboxed'}})(document.documentElement)</script>
 <style>
-:root{
-  --bg:#f4efe4; --bg-2:#ebe4d5; --card:#fffdf8; --deep:#241f18;
-  --ink:#241f18; --ink-2:#4a4136; --ink-3:#7d7261;
-  --rule:#ddd3bf; --rule-2:#c6b9a0;
-  --mad:#a8452c; --mad-soft:#f2e2db;
-  --ind:#2c4a6e; --verd:#436b4d; --gold:#8a6716;
-  --disp:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
-  --ui:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --e:cubic-bezier(.2,.7,.2,1);
-}
-:root[data-theme="dark"]{
-  --bg:#15120e; --bg-2:#100e0b; --card:#1f1a15; --deep:#0b0908;
-  --ink:#f0e9dc; --ink-2:#cdc2ae; --ink-3:#968973;
-  --rule:#3a322a; --rule-2:#4b4136;
-  --mad:#e08a70; --mad-soft:#3a231c;
-  --ind:#8fb0d6; --verd:#8fbf9a; --gold:#d4a943;
-}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#15120e; --bg-2:#100e0b; --card:#1f1a15; --deep:#0b0908;
-  --ink:#f0e9dc; --ink-2:#cdc2ae; --ink-3:#968973;
-  --rule:#3a322a; --rule-2:#4b4136;
-  --mad:#e08a70; --mad-soft:#3a231c;
-  --ind:#8fb0d6; --verd:#8fbf9a; --gold:#d4a943;
-}}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--ui);
-  -webkit-font-smoothing:antialiased;overflow-x:hidden}
-.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-.split > *{min-width:0}
-.narrow{max-width:760px}
-h1,h2,h3{margin:0;font-weight:400}
-h1{font-family:var(--disp);font-size:clamp(40px,8vw,86px);line-height:.98;letter-spacing:-.02em}
-h2{font-family:var(--disp);font-size:clamp(28px,4.6vw,44px);line-height:1.08;letter-spacing:-.015em}
-h3{font:600 16px/1.35 var(--ui)}
-p{margin:0 0 16px}
-a{color:var(--mad)}
-.mono{font-family:var(--mono)}
-.eyebrow{font:600 11px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mad)}
-.lede{font-size:clamp(17px,2.2vw,21px);color:var(--ink-2);max-width:58ch}
-.muted{color:var(--ink-3)}
-
-/* nav */
-nav{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);
-  backdrop-filter:blur(10px);border-bottom:1px solid var(--rule)}
-nav .wrap{display:flex;align-items:center;gap:22px;height:58px}
-.brand{font:600 15px var(--ui);letter-spacing:-.01em;text-decoration:none;color:var(--ink);
-  display:flex;align-items:center;gap:9px}
-.brand i{width:9px;height:9px;background:var(--mad);border-radius:50%;display:block}
-nav a.l{font:500 13.5px var(--ui);color:var(--ink-3);text-decoration:none}
-nav a.l:hover{color:var(--mad)}
-.spacer{flex:1}
-.navcta{font:600 13px var(--ui);text-decoration:none;color:var(--bg);background:var(--ink);
-  padding:9px 15px;border-radius:2px}
-@media(max-width:760px){nav a.l{display:none}}
-
-/* bands */
-.band{padding:clamp(64px,9vw,110px) 0}
-.band.alt{background:var(--bg-2)}
-.band.dark{background:var(--deep);color:#f0e9dc}
-.band.dark h2,.band.dark h3{color:#f7f2e8}
-.band.dark .muted{color:#9c9080}
-.band.dark .eyebrow{color:var(--gold)}
-
-/* hero */
-.hero{position:relative;padding:clamp(56px,8vw,96px) 0 clamp(50px,7vw,88px);overflow:hidden}
-.mesh{position:absolute;inset:-30% -10%;z-index:0;pointer-events:none;opacity:.45;
-  background:
-    radial-gradient(36vw 36vw at 78% 16%, color-mix(in srgb,var(--mad) 26%,transparent), transparent 62%),
-    radial-gradient(40vw 40vw at 18% 4%, color-mix(in srgb,var(--ind) 22%,transparent), transparent 64%);
-  animation:drift 26s ease-in-out infinite alternate}
-@keyframes drift{to{transform:translate3d(0,-4%,0) scale(1.12)}}
-.hero .wrap{position:relative;z-index:1}
-.kin span{display:inline-block;opacity:0;transform:translateY(.44em);animation:rise .8s var(--e) forwards}
-@keyframes rise{to{opacity:1;transform:none}}
-.cta{display:flex;gap:11px;flex-wrap:wrap;margin-top:30px}
-.btn{display:inline-flex;align-items:center;min-height:46px;padding:0 22px;
-  border:1px solid var(--rule-2);background:var(--card);color:var(--ink);
-  font:600 14px var(--ui);text-decoration:none;border-radius:2px;transition:.16s}
-.btn.p{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.btn:hover{transform:translateY(-1px);border-color:var(--mad);color:var(--mad)}
-.btn.p:hover{color:var(--bg);opacity:.9}
-
-/* stat band */
-.stats{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
-  grid-template-columns:repeat(2,1fr);margin-top:52px}
-@media(min-width:720px){.stats{grid-template-columns:repeat(4,1fr)}}
-.stat{background:var(--bg);padding:22px 20px}
-.stat b{display:block;font-family:var(--disp);font-size:clamp(30px,4vw,44px);line-height:1;
-  color:var(--ink);font-weight:400}
-.stat span{display:block;margin-top:8px;font:500 12.5px var(--mono);color:var(--ink-3)}
-
-/* cards */
-.cards{display:grid;gap:18px;margin-top:38px}
-@media(min-width:760px){.cards.c2{grid-template-columns:1fr 1fr}.cards.c4{grid-template-columns:repeat(2,1fr)}}
-.card{background:var(--card);border:1px solid var(--rule);padding:24px;border-radius:2px;
-  transition:.2s var(--e)}
-.card:hover{transform:translateY(-3px);border-color:var(--rule-2);
-  box-shadow:0 14px 34px rgba(36,31,24,.07)}
-.card .n{font:600 11px var(--mono);letter-spacing:.16em;color:var(--mad);display:block;margin-bottom:12px}
-.card p{font-size:14.5px;color:var(--ink-3);margin:0}
-.card .q{display:block;margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);
-  font:12.5px var(--mono);color:var(--mad)}
-
-/* code */
-pre{margin:0;background:var(--deep);border:1px solid var(--rule-2);color:#d9d0be;
-  padding:20px 22px;overflow-x:auto;font:500 13px/1.8 var(--mono);border-radius:2px}
-:root[data-theme="dark"] pre{background:#0b0908}
-pre b{font-weight:600;color:#f4ecdb}
-.k{color:#8fb0d6;font-weight:600} .s{color:#9ac9a5} .cm{color:#7d7261;font-style:italic}
-.o{color:#e08a70}
-.codebar{display:flex;gap:2px;margin-bottom:-1px;flex-wrap:wrap}
-.tab{font:600 12px var(--mono);padding:10px 14px;border:1px solid var(--rule);
-  border-bottom:0;background:var(--bg-2);color:var(--ink-3);cursor:pointer;min-height:40px}
-.tab[aria-selected="true"]{background:var(--deep);color:#f4ecdb;border-color:var(--rule-2)}
-:root[data-theme="dark"] .tab[aria-selected="true"]{background:#0b0908}
-.pane{display:none} .pane.on{display:block}
-
-/* reveal */
-.rv{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s var(--e)}
-.rv.in{opacity:1;transform:none}
-
-/* chart */
-.chart{display:grid;gap:14px;margin-top:30px}
-.row{display:grid;grid-template-columns:132px 1fr 56px;gap:14px;align-items:center;font-size:13.5px}
-@media(max-width:620px){.row{grid-template-columns:96px 1fr 44px;gap:10px;font-size:12.5px}}
-.track{height:30px;background:var(--bg-2);border:1px solid var(--rule);position:relative;overflow:hidden}
-.band.dark .track{background:#191410;border-color:#332b23}
-.fill{height:100%;width:0;transition:width 1.1s var(--e);background:var(--mad)}
-.fill.good{background:var(--verd)}
-.row .v{font:600 13px var(--mono);color:var(--ink-3);text-align:right}
-.band.dark .row .v{color:#9c9080}
-
-/* anim stage */
-.stage{background:var(--card);border:1px solid var(--rule);padding:26px 24px;margin-top:34px}
-.band.dark .stage{background:#191410;border-color:#332b23}
-.tl{display:grid;gap:0}
-.ev{display:grid;grid-template-columns:118px 1fr;gap:16px;padding:13px 0;
-  border-bottom:1px dashed var(--rule);opacity:.2;transition:opacity .5s var(--e)}
-.band.dark .ev{border-color:#332b23}
-.ev:last-child{border-bottom:0}
-.ev .t{font:600 12px var(--mono);color:var(--mad)}
-.ev .d{font-size:14px}
-.ev .m{font:12px var(--mono);color:var(--ink-3);display:block;margin-top:3px}
-[data-step="1"] .e1,[data-step="2"] .e1,[data-step="3"] .e1,[data-step="4"] .e1,[data-step="5"] .e1,
-[data-step="2"] .e2,[data-step="3"] .e2,[data-step="4"] .e2,[data-step="5"] .e2,
-[data-step="3"] .e3,[data-step="4"] .e3,[data-step="5"] .e3,
-[data-step="4"] .e4,[data-step="5"] .e4,
-[data-step="5"] .e5{opacity:1}
-.replay{margin-top:20px;min-height:44px;padding:0 20px;border:1px solid var(--rule-2);
-  background:transparent;color:inherit;font:600 13px var(--ui);cursor:pointer;border-radius:2px}
-.replay:hover{border-color:var(--mad);color:var(--mad)}
-
-/* wheel */
-.wheel{animation:turn 30s linear infinite;transform-origin:center}
-@keyframes turn{to{transform:rotate(360deg)}}
-.march{stroke-dasharray:4 5;animation:march 1.3s linear infinite}
-@keyframes march{to{stroke-dashoffset:-18}}
-figure{margin:30px 0 0} figure svg{display:block;width:100%;height:auto}
-.s-line{stroke:var(--rule-2);fill:none;stroke-width:1.3}
-.s-thin{stroke:var(--rule);fill:none;stroke-width:1}
-.s-ink{fill:var(--ink)} .s-mut{fill:var(--ink-3)} .s-mad{fill:var(--mad)}
-.s-mono{font-family:var(--mono);font-size:10.5px} .s-ttl{font:600 12px var(--ui)}
-.band.dark .s-ink{fill:#f0e9dc} .band.dark .s-mut{fill:#9c9080}
-.band.dark .s-line{stroke:#4b4136} .band.dark .s-thin{stroke:#332b23}
-
-.note{border-left:2px solid var(--mad);background:var(--mad-soft);padding:16px 20px;margin:24px 0}
-.note p{margin:0}
-.split{display:grid;gap:34px;align-items:start}
-@media(min-width:860px){.split{grid-template-columns:1fr 1fr;gap:48px}}
-footer{background:var(--deep);color:#cdc2ae;padding:60px 0}
-footer a{color:var(--gold)}
-.themebtn{position:fixed;right:16px;bottom:16px;z-index:50;min-height:44px;padding:0 16px;
-  border:1px solid var(--rule-2);background:var(--card);color:var(--ink);
-  font:600 12px var(--ui);cursor:pointer;border-radius:2px}
-@media(prefers-reduced-motion:reduce){
-  .rv{opacity:1;transform:none;transition:none}
-  .kin span{opacity:1;transform:none;animation:none}
-  .mesh,.wheel,.march{animation:none}
-  .ev{opacity:1} .fill{transition:none}
-}
+:root{color-scheme:light;--paper:#F2EEE3;--sheet:#FBF7ED;--ink:#15130F;--soft:#484138;--faint:#746B5F;--rule:#B8AC99;--rule-soft:#D8CFBF;--oxide:#B43620;--verify:#276B3E;--orient:#176CA6;--night:#15130F;--night-sheet:#211E18;--night-ink:#F4EEE2;--night-soft:#C9BFAA;--display:"Newsreader",Georgia,serif;--ui:"IBM Plex Sans",Arial,sans-serif;--mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;--ease:cubic-bezier(.16,1,.3,1);--measure:68ch;--gutter:clamp(1rem,4vw,3rem)}
+:root[data-theme="dark"]{color-scheme:dark;--paper:#15130F;--sheet:#211E18;--ink:#F4EEE2;--soft:#C9BFAA;--faint:#A99F8E;--rule:#62594C;--rule-soft:#39342C;--oxide:#FF8A6B;--verify:#73D391;--orient:#6EC5F5;--night:#0E0D0A;--night-sheet:#191713;--night-ink:#F4EEE2;--night-soft:#C9BFAA}
+*{box-sizing:border-box}html{background:var(--paper);scroll-behavior:smooth;scroll-padding-top:5.25rem}body{margin:0;overflow-x:hidden;background:var(--paper);color:var(--ink);font:400 1rem/1.62 var(--ui);font-kerning:normal}
+body::before{content:"";position:fixed;inset:0;z-index:1000;pointer-events:none;opacity:.12;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");mix-blend-mode:multiply;animation:grain-drift 18s steps(8) infinite}:root[data-theme="dark"] body::before{mix-blend-mode:screen;opacity:.06}
+a{color:var(--orient);text-underline-offset:.2em;text-decoration-thickness:1px}a:hover{text-decoration-thickness:2px}button,a{font:inherit}button{color:inherit}:focus-visible{outline:3px solid var(--orient);outline-offset:3px}::selection{background:var(--oxide);color:var(--sheet)}
+.skip{position:fixed;top:.5rem;left:.5rem;z-index:2000;transform:translateY(-180%);padding:.75rem 1rem;background:var(--ink);color:var(--paper);font:600 .78rem var(--mono)}.skip:focus{transform:none}.mono,code,pre{font-family:var(--mono);font-variant-ligatures:none}.wrap{width:min(1180px,100%);margin:auto;padding-inline:var(--gutter)}
+.site-head{position:sticky;top:0;z-index:100;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--paper) 94%,transparent);backdrop-filter:blur(12px)}.head-inner{display:flex;align-items:stretch;min-height:4.5rem}.brand{display:flex;align-items:center;gap:.65rem;flex:0 0 auto;padding-right:1.25rem;border-right:1px solid var(--rule);color:var(--ink);font:700 .92rem var(--ui);text-decoration:none}.brand-mark{width:.72rem;height:.72rem;border:2px solid var(--oxide);transform:rotate(45deg)}
+:root[data-layout="boxed"] body{background:var(--rule-soft)}:root[data-layout="boxed"] .site-head,:root[data-layout="boxed"] main,:root[data-layout="boxed"] .imprint{width:min(1280px,calc(100% - 2rem));margin-inline:auto}:root[data-layout="boxed"] main{border-inline:1px solid var(--rule);background:var(--paper)}:root[data-layout="boxed"] .site-head{border-inline:1px solid var(--rule)}:root[data-layout="boxed"] .imprint{border-inline:1px solid var(--rule)}
+.folio-nav{display:flex;align-items:stretch;overflow-x:auto;scrollbar-width:none}.folio-nav::-webkit-scrollbar{display:none}.folio-nav a{display:flex;align-items:center;min-height:4.5rem;padding:0 .9rem;border-right:1px solid var(--rule-soft);color:var(--soft);font:600 .68rem var(--mono);letter-spacing:.06em;text-decoration:none;text-transform:uppercase;white-space:nowrap}.folio-nav a::before{content:attr(data-n);margin-right:.45rem;color:var(--oxide)}.head-action{display:flex;align-items:center;gap:.35rem;margin-left:auto;padding-left:.75rem;background:var(--paper)}.icon-button{min-width:2.75rem;min-height:2.75rem;border:1px solid var(--rule);background:var(--sheet);font:600 .7rem var(--mono);cursor:pointer}.github{display:flex;align-items:center;min-height:2.75rem;padding:0 1rem;background:var(--ink);color:var(--paper);font:600 .72rem var(--mono);text-decoration:none;text-transform:uppercase}
+.folio{position:relative;border-bottom:1px solid var(--rule);container-type:inline-size}.folio-grid{display:grid;grid-template-columns:3.75rem minmax(0,1fr)}.rail{position:relative;border-right:1px solid var(--rule)}.rail span{position:sticky;top:6rem;display:block;padding-top:1.2rem;color:var(--oxide);font:600 .67rem var(--mono);letter-spacing:.12em;text-align:center;writing-mode:vertical-rl;text-transform:uppercase}.folio-body{min-width:0;padding:clamp(4rem,9vw,8rem) var(--gutter)}
+.eyebrow{margin:0;color:var(--oxide);font:600 .7rem/1.3 var(--mono);letter-spacing:.18em;text-transform:uppercase}.display{margin:.5rem 0 0;font:400 clamp(3.3rem,9.5vw,8.6rem)/.82 var(--display);letter-spacing:-.062em}.display em{color:var(--oxide);font-weight:400}.section-title{max-width:16ch;margin:.65rem 0 0;font:400 clamp(2.4rem,6vw,5.4rem)/.91 var(--display);letter-spacing:-.048em}.subhead{margin:0;font:600 clamp(1.15rem,2vw,1.5rem)/1.25 var(--ui)}.lede{max-width:62ch;margin:1.5rem 0 0;color:var(--soft);font-size:clamp(1.08rem,2vw,1.32rem);line-height:1.55}.body-copy{max-width:var(--measure)}.body-copy p:last-child{margin-bottom:0}.kicker{display:flex;align-items:center;gap:.75rem;margin:0;font:600 .72rem var(--mono);letter-spacing:.1em;text-transform:uppercase}.kicker::before{content:"";width:2.5rem;border-top:2px solid currentColor}
+.cover{min-height:calc(100svh - 4.5rem)}.cover .folio-body{display:grid;align-items:start;gap:clamp(3rem,7vw,7rem);padding-top:clamp(3.5rem,8vw,7rem)}.cover-copy{position:relative}.cover-copy::after{content:"PROCEDURAL EVIDENCE / ISSUE 0.8";position:absolute;right:0;top:0;color:var(--faint);font:600 .62rem var(--mono);letter-spacing:.12em;writing-mode:vertical-rl}.hero-meta{margin-bottom:2rem}.hero-line{display:block;opacity:0;transform:translateY(.5em);animation:impose .72s var(--ease) forwards}.hero-line:nth-child(2){animation-delay:110ms}.hero-line:nth-child(3){animation-delay:220ms}.no-js .hero-line{opacity:1;transform:none;animation:none}
+.cta-row{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:2rem}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:3rem;padding:0 1.15rem;border:1px solid var(--rule);background:var(--sheet);color:var(--ink);font:600 .78rem var(--mono);text-decoration:none;text-transform:uppercase;transition:transform 140ms var(--ease),background 140ms,color 140ms}.btn.primary{border-color:var(--ink);background:var(--ink);color:var(--paper)}.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(0)}
+.cover-proof{display:grid;grid-template-columns:minmax(0,1fr);gap:1.5rem}.run-sheet{position:relative;padding:clamp(1.2rem,4vw,2.4rem);border:2px solid var(--ink);background:var(--sheet);box-shadow:clamp(.5rem,2vw,1.25rem) clamp(.5rem,2vw,1.25rem) 0 var(--rule);transform:rotate(-1deg)}.run-sheet::before,.run-sheet::after{content:"";position:absolute;width:1.25rem;height:1.25rem;border-color:var(--oxide)}.run-sheet::before{left:-.45rem;top:-.45rem;border-left:2px solid;border-top:2px solid}.run-sheet::after{right:-.45rem;bottom:-.45rem;border-right:2px solid;border-bottom:2px solid}.sheet-head,.sheet-row{display:flex;justify-content:space-between;gap:1rem}.sheet-head{padding-bottom:1rem;border-bottom:3px double var(--ink);font:600 .68rem var(--mono);text-transform:uppercase}.sheet-title{margin:2rem 0 1.5rem;font:400 clamp(2.2rem,5vw,4.3rem)/.9 var(--display);letter-spacing:-.04em}.sheet-row{padding:.7rem 0;border-top:1px solid var(--rule);font:.73rem var(--mono)}.sheet-row b{font-weight:600}.status{display:inline-flex;align-items:center;gap:.45rem;color:var(--verify);font-weight:600}.status::before{content:"✓";display:grid;place-items:center;width:1rem;height:1rem;border:1px solid currentColor}.stamp{position:absolute;right:1rem;top:43%;transform:rotate(-8deg) scale(.92);padding:.65rem .8rem;border:3px double var(--oxide);color:var(--oxide);font:600 .7rem var(--mono);letter-spacing:.08em;text-transform:uppercase;opacity:0;animation:stamp-in .32s 650ms var(--ease) forwards}.no-js .stamp{opacity:1;transform:rotate(-8deg)}.receipt-note{margin:.85rem 0 0;color:var(--faint);font:.7rem/1.5 var(--mono)}
+.fact-register{display:grid;grid-template-columns:repeat(2,1fr);border:1px solid var(--rule);border-right:0;border-bottom:0}.fact{padding:1rem;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);background:var(--sheet)}.fact b{display:block;font:600 1.55rem var(--mono);font-variant-numeric:tabular-nums}.fact span{display:block;margin-top:.25rem;color:var(--faint);font:.65rem var(--mono);text-transform:uppercase}.annotation{max-width:74ch;margin-top:2rem;padding:1.15rem 1.25rem;border-left:4px solid var(--oxide);background:var(--sheet)}.annotation p{margin:0}.annotation strong{color:var(--ink)}
+.two-up{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;gap:clamp(2rem,5vw,5rem)}.two-up>*{min-width:0}.progressive{display:grid;grid-template-columns:minmax(17rem,.82fr) minmax(0,1.18fr);align-items:start;gap:clamp(2rem,5vw,5rem);margin-top:3rem}.progress-stage{position:sticky;top:7rem;min-height:24rem;overflow:hidden;border:1px solid var(--ink);background:var(--sheet)}.progress-stage::after{content:"";position:absolute;right:-4rem;bottom:-5rem;width:13rem;aspect-ratio:1;border:1px solid var(--rule);border-radius:50%}.stage-head{display:flex;justify-content:space-between;padding:.8rem 1rem;border-bottom:3px double var(--ink);color:var(--faint);font:600 .66rem var(--mono);letter-spacing:.1em;text-transform:uppercase}.stage-viewport{position:relative;min-height:19rem}.stage-state{position:absolute;inset:0;display:grid;align-content:center;gap:.8rem;padding:2rem;opacity:0;transform:translateY(1rem);transition:opacity .35s var(--ease),transform .55s var(--ease)}.stage-state .stage-n{color:var(--oxide);font:600 .72rem var(--mono)}.stage-state strong{max-width:10ch;font:400 clamp(2rem,4vw,3.7rem)/.9 var(--display);letter-spacing:-.04em}.stage-state small{max-width:30ch;color:var(--soft);font:.72rem/1.5 var(--mono)}.progress-stage[data-step="1"] [data-state="1"],.progress-stage[data-step="2"] [data-state="2"],.progress-stage[data-step="3"] [data-state="3"],.progress-stage[data-step="4"] [data-state="4"]{opacity:1;transform:none}.stage-meter{position:absolute;left:0;right:0;bottom:0;height:.3rem;background:var(--rule-soft)}.stage-meter span{display:block;width:25%;height:100%;background:var(--oxide);transform-origin:left;transition:width .5s var(--ease)}.progress-stage[data-step="2"] .stage-meter span{width:50%}.progress-stage[data-step="3"] .stage-meter span{width:75%}.progress-stage[data-step="4"] .stage-meter span{width:100%}.argument{display:grid;gap:0;border-top:1px solid var(--rule)}.argument-item{display:grid;grid-template-columns:3.5rem minmax(0,1fr);align-content:center;min-height:58vh;border-bottom:1px solid var(--rule);opacity:.38;transition:opacity .35s var(--ease)}.argument-item.is-current{opacity:1}.argument-item .n{align-self:stretch;padding:clamp(1.25rem,4vh,2.5rem) .5rem;color:var(--oxide);font:600 .7rem var(--mono)}.argument-copy{padding:clamp(1.25rem,4vh,2.5rem) 0 clamp(1.4rem,4vh,2.5rem) 1.25rem;border-left:1px solid var(--rule)}.argument-copy h3{margin:0 0 .45rem;font:600 1rem var(--ui)}.argument-copy p{margin:0;color:var(--soft);font-size:.92rem}.argument-copy .question{display:block;margin-top:.8rem;color:var(--oxide);font:.72rem var(--mono)}
+.correction{display:grid;grid-template-columns:1fr 1fr;margin-top:2rem;border:1px solid var(--ink)}.correction>div{padding:1.4rem}.correction>div+div{border-left:1px solid var(--ink);background:var(--ink);color:var(--paper)}.correction small{display:block;margin-bottom:.75rem;color:var(--oxide);font:600 .68rem var(--mono);letter-spacing:.1em}.correction h3{margin:0;font:600 1.1rem var(--ui)}.correction p{margin:.6rem 0 0;font-size:.9rem}.question{display:block;margin-top:.8rem;color:var(--oxide);font:.72rem var(--mono)}
+.failure{background:var(--sheet)}.proof-test{margin-top:2.5rem;border-top:3px double var(--ink)}.proof-row{display:grid;grid-template-columns:minmax(8rem,.65fr) minmax(0,1fr) 3rem;align-items:center;gap:1rem;min-height:4.25rem;border-bottom:1px solid var(--rule)}.proof-row .label{font-weight:600}.proof-track{position:relative;height:1px;background:var(--rule)}.proof-mark{position:absolute;left:0;top:50%;width:100%;height:.45rem;transform:translateY(-50%) scaleX(0);transform-origin:left;background:var(--oxide)}.proof-row.good .proof-mark{background:var(--verify)}.is-in .proof-mark{animation:prove .65s calc(var(--i)*90ms) var(--ease) forwards}.proof-result{font:600 .72rem var(--mono);text-align:right;text-transform:uppercase}.good .proof-result{color:var(--verify)}.bad .proof-result{color:var(--oxide)}
+.register{margin-top:2.5rem;border-top:1px solid var(--ink)}.register details{border-bottom:1px solid var(--ink)}.register summary{display:grid;grid-template-columns:3.25rem minmax(8rem,.55fr) minmax(0,1fr) 2rem;align-items:center;min-height:4.75rem;cursor:pointer;list-style:none}.register summary::-webkit-details-marker{display:none}.register .roman{color:var(--oxide);font:600 .72rem var(--mono)}.register summary strong{font:600 1rem var(--ui)}.register summary span{color:var(--soft);font-size:.9rem}.register summary::after{content:"+";font:600 1.2rem var(--mono);text-align:right}.register details[open] summary::after{content:"−"}.register-copy{max-width:64ch;padding:0 2rem 1.6rem 3.25rem;color:var(--soft)}.register-copy p{margin:0}.system-intro{display:flex;align-items:end;justify-content:space-between;gap:2rem;margin-top:clamp(5rem,9vw,8rem);padding-bottom:1rem;border-bottom:3px double var(--ink)}.system-intro p{max-width:40ch;margin:0;color:var(--soft)}.system-story{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(15rem,.65fr);align-items:start;gap:clamp(2rem,4vw,4rem);margin-top:2rem}.system-board{position:sticky;top:7rem;min-width:0;border:1px solid var(--ink);background:var(--sheet)}.system-board-head{display:flex;justify-content:space-between;gap:1rem;padding:.8rem 1rem;border-bottom:1px solid var(--rule);color:var(--faint);font:600 .65rem var(--mono);text-transform:uppercase}.system-board svg{display:block;width:100%;height:auto}.system-node,.system-edge{opacity:.14;transition:opacity .4s var(--ease)}.system-node rect{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}.system-node text{fill:var(--ink);font:600 13px var(--mono);letter-spacing:.04em}.system-node .node-note{fill:var(--faint);font-size:10px;font-weight:400}.system-node.core rect{fill:var(--ink)}.system-node.core text{fill:var(--paper)}.system-edge{fill:none;stroke:var(--rule);stroke-width:2;stroke-dasharray:6 7;vector-effect:non-scaling-stroke}.system-board[data-beat="all"] .system-node,.system-board[data-beat="all"] .system-edge,.system-board[data-beat="1"] [data-active~="1"],.system-board[data-beat="2"] [data-active~="2"],.system-board[data-beat="3"] [data-active~="3"],.system-board[data-beat="4"] [data-active~="4"],.system-board[data-beat="5"] [data-active~="5"]{opacity:1}.system-board[data-beat]:not([data-beat="all"]) .system-edge[data-active]{stroke:var(--oxide);animation:system-flow 1.2s linear infinite}.system-legend{display:flex;flex-wrap:wrap;gap:.6rem;padding:.8rem 1rem;border-top:1px solid var(--rule);color:var(--faint);font:.63rem var(--mono)}.system-legend span::before{content:"";display:inline-block;width:.55rem;height:.55rem;margin-right:.35rem;border:1px solid var(--rule)}.system-beats{border-top:1px solid var(--rule)}.system-beat{display:grid;align-content:center;min-height:48vh;padding:2rem 0;border-bottom:1px solid var(--rule);opacity:.38;transition:opacity .35s var(--ease)}.system-beat.is-current{opacity:1}.system-beat .n{color:var(--oxide);font:600 .68rem var(--mono)}.system-beat h3{margin:.6rem 0;font:600 1rem var(--ui)}.system-beat p{margin:0;color:var(--soft);font-size:.9rem}.system-beat .question{margin-top:1rem}
+.routes{background:var(--sheet)}.tablist{display:flex;overflow-x:auto;margin-top:2.5rem;border-bottom:1px solid var(--ink);scrollbar-width:none}.tablist::-webkit-scrollbar{display:none}.tab{position:relative;flex:0 0 auto;min-height:3.25rem;padding:0 1.15rem;border:0;border-right:1px solid var(--rule);background:transparent;color:var(--soft);font:600 .72rem var(--mono);cursor:pointer;text-transform:uppercase}.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}.tab-panel{padding-top:2.5rem}.js .tab-panel[hidden]{display:none}.no-js .tablist{display:none}.no-js .tab-panel{display:block!important;padding-top:3rem}.no-js .tab-panel+.tab-panel{margin-top:4rem;border-top:3px double var(--ink)}.route-heading{display:grid;gap:1rem;margin-bottom:2rem}.route-heading h3{margin:0;font:400 clamp(2rem,5vw,4rem)/.95 var(--display);letter-spacing:-.035em}.steps,.step,.step-body{min-width:0}.steps{display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem}.step{display:grid;grid-template-columns:2.5rem minmax(0,1fr);gap:1rem}.step-n{display:grid;place-items:center;width:2.5rem;height:2.5rem;border:1px solid var(--oxide);color:var(--oxide);font:600 .7rem var(--mono)}.step-body h4{margin:.35rem 0 .65rem;font:600 1rem var(--ui)}.step-body p{max-width:70ch;margin:.75rem 0;color:var(--soft)}
+.code-wrap{position:relative;min-width:0;margin:.9rem 0}.copy-code{position:absolute;right:.5rem;top:.5rem;z-index:2;min-height:2.75rem;padding:0 .75rem;border:1px solid #62594C;background:#211E18;color:#F4EEE2;font:600 .67rem var(--mono);cursor:pointer;text-transform:uppercase}pre{max-width:100%;margin:0;overflow-x:auto;padding:1.5rem;padding-top:3.6rem;border:1px solid #62594C;background:#15130F;color:#F4EEE2;font:400 .79rem/1.75 var(--mono);tab-size:2}pre b{color:#F4EEE2}.k{color:#6EC5F5}.s{color:#73D391}.cm{color:#A99F8E;font-style:italic}.o{color:#FF8A6B}.code-index{min-width:0;margin-top:1.4rem}.code-index .tablist{margin-top:0;border:1px solid var(--rule)}.code-index .tab{flex:1 0 auto}.code-index .tab-panel{padding-top:1rem}.js .no-js-heading{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.night{background:var(--night);color:var(--night-ink)}.night .rail{border-color:#62594C}.night .rail span,.night .eyebrow{color:#FF8A6B}.night .section-title,.night .subhead{color:var(--night-ink)}.night .lede,.night .muted{color:var(--night-soft)}.event-sheet{margin-top:2.5rem;border:1px solid #62594C;background:var(--night-sheet)}.event-head{display:flex;justify-content:space-between;gap:1rem;padding:1rem 1.2rem;border-bottom:3px double #62594C;font:600 .68rem var(--mono);text-transform:uppercase}.event{display:grid;grid-template-columns:7rem minmax(0,1fr) 1.5rem;gap:1rem;padding:1rem 1.2rem;border-bottom:1px solid #39342C;opacity:.22;transition:opacity .35s var(--ease),transform .35s var(--ease);transform:translateX(-.5rem)}.event.active{opacity:1;transform:none}.event time{color:#FF8A6B;font:600 .72rem var(--mono)}.event p{margin:0}.event small{display:block;margin-top:.2rem;color:var(--night-soft);font:.69rem var(--mono)}.event .seal{color:#73D391}.replay{min-height:3rem;margin:1rem 1.2rem;padding:0 1rem;border:1px solid #62594C;background:transparent;color:var(--night-ink);font:600 .72rem var(--mono);cursor:pointer;text-transform:uppercase}
+.mechanism{display:grid;grid-template-columns:7rem minmax(0,1fr);align-items:center;gap:1.5rem;margin-top:3rem;padding:1.5rem 0;border-block:1px solid #62594C}.gear{position:relative;width:6rem;aspect-ratio:1;border:1px solid #62594C;border-radius:50%;background:repeating-conic-gradient(from 0deg,#62594C 0 2deg,transparent 2deg 30deg);animation:turn 18s linear infinite}.gear::before,.gear::after{content:"";position:absolute}.gear::before{inset:.65rem;border:1px solid #62594C;border-radius:50%;background:var(--night)}.gear::after{inset:2.65rem;border-radius:50%;background:#FF8A6B}.route-line{position:relative;height:2px;background:#62594C;overflow:hidden}.route-line::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#FF8A6B 0 .45rem,transparent .45rem .85rem);animation:march 1.3s linear infinite}.route-labels{display:flex;justify-content:space-between;margin-top:.65rem;color:var(--night-soft);font:.68rem var(--mono)}.detail-grid{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;gap:2.5rem;margin-top:2.5rem}.detail-grid>*{min-width:0}.night .annotation{background:var(--night-sheet);border-left-color:#FF8A6B}.night pre{background:#0E0D0A}
+.bound-insert{min-width:0;margin-top:2.5rem;padding:clamp(1.25rem,3vw,2rem);border:1px solid var(--ink);background:var(--sheet)}.colophon{background:var(--sheet)}.name-layout{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);grid-template-areas:"context quote" "after quote";align-items:start;gap:2rem clamp(3rem,7vw,8rem);margin-top:clamp(2.5rem,5vw,4.5rem)}.name-context{grid-area:context}.name-quote-panel{grid-area:quote}.name-after{grid-area:after;padding-top:1.4rem;border-top:1px solid var(--rule)}.name-after p:first-child{margin-top:0}.name-quote{margin:0;padding:clamp(2rem,4vw,3.25rem);border:3px double var(--ink);font:italic 400 clamp(1.7rem,2.5vw,2.15rem)/1.27 var(--display)}.certificate{display:grid;gap:2rem;border:2px solid var(--ink);padding:clamp(1.5rem,5vw,4rem);background:var(--sheet)}.certificate::before{content:"SCOPE CERTIFICATE / JAZARI";color:var(--oxide);font:600 .68rem var(--mono);letter-spacing:.12em}.certificate .section-title{max-width:none}.signature{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;padding-top:1.25rem;border-top:1px solid var(--ink);font:.7rem var(--mono)}
+.imprint{padding:2.5rem var(--gutter);background:var(--ink);color:var(--paper)}.imprint-inner{display:flex;flex-wrap:wrap;justify-content:space-between;gap:1rem;width:min(1180px,100%);margin:auto}.imprint p{margin:0;font:.75rem var(--mono)}.imprint a{color:inherit}.reveal{opacity:0;transform:translateY(1.25rem);transition:opacity .7s var(--ease),transform .7s var(--ease)}.reveal.is-in{opacity:1;transform:none}.no-js .reveal{opacity:1;transform:none}.no-js .icon-button,.no-js .copy-code,.no-js .replay{display:none}.no-js .progress-stage{display:none}.no-js .progressive{grid-template-columns:1fr}.no-js .argument-item,.no-js .system-node,.no-js .system-edge,.no-js .system-beat{opacity:1}.no-js .system-board{position:relative;top:auto}.no-js .system-beat{min-height:0;padding:2rem 0}
+@keyframes impose{to{opacity:1;transform:none}}@keyframes stamp-in{to{opacity:1;transform:rotate(-8deg) scale(1)}}@keyframes prove{to{transform:translateY(-50%) scaleX(1)}}@keyframes turn{to{transform:rotate(360deg)}}@keyframes march{to{transform:translateX(.85rem)}}@keyframes system-flow{to{stroke-dashoffset:-26}}@keyframes grain-drift{0%,100%{transform:translate(0)}25%{transform:translate(-1.5%,1%)}50%{transform:translate(1%,-1%)}75%{transform:translate(.5%,1.5%)}}
+@media(min-width:760px){.cover .folio-body{grid-template-columns:minmax(0,1.08fr) minmax(19rem,.72fr)}.two-up,.detail-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.fact-register{grid-template-columns:repeat(4,1fr)}.folio-body{padding-left:clamp(2rem,6vw,6rem);padding-right:clamp(2rem,6vw,6rem)}}
+@media(max-width:960px){.folio-nav a:nth-child(n+6){display:none}.github{display:none}.cover-copy::after{display:none}.progressive{grid-template-columns:minmax(14rem,.72fr) minmax(0,1.28fr)}.system-story{display:block}.system-board{top:6rem;z-index:2}.system-beats{margin-top:1.5rem}.system-beat{min-height:42svh;padding:2rem 1rem}}
+@media(max-width:640px){html{scroll-padding-top:4.25rem}:root[data-layout="boxed"] .site-head,:root[data-layout="boxed"] main,:root[data-layout="boxed"] .imprint{width:calc(100% - .5rem)}.head-inner{min-height:4.25rem}.brand{padding-right:.8rem}.folio-nav a{min-height:4.25rem;padding-inline:.7rem}.folio-nav a:nth-child(n+4){display:none}.head-action{padding-left:.35rem}.head-action .icon-button{min-width:2.55rem}.folio-grid{grid-template-columns:2.2rem minmax(0,1fr)}.rail span{top:5rem;font-size:.58rem}.folio-body{padding:3.5rem 1rem}.display{font-size:clamp(3.4rem,18vw,5rem)}.section-title{font-size:clamp(2.5rem,13vw,4rem)}.correction{grid-template-columns:1fr}.correction>div+div{border-left:0;border-top:1px solid var(--ink)}.progressive{grid-template-columns:1fr;gap:0}.progress-stage{top:4.75rem;z-index:3;min-height:9.5rem}.stage-head{padding:.55rem .75rem}.stage-viewport{min-height:7rem}.stage-state{grid-template-columns:2.5rem 1fr;align-content:center;gap:.1rem .5rem;padding:.8rem}.stage-state .stage-n{grid-row:1/3}.stage-state strong{font-size:1.65rem}.stage-state small{font-size:.62rem}.argument-item{min-height:48svh}.register summary{grid-template-columns:2.25rem minmax(6.5rem,.55fr) minmax(0,1fr) 1.5rem;gap:.3rem}.register summary span{font-size:.78rem}.register-copy{padding-left:2.25rem}.system-intro{display:block}.system-intro p{margin-top:1rem}.system-board{top:4.75rem}.system-board-head{padding:.6rem .7rem}.system-legend{display:none}.system-beat{min-height:13rem}.proof-row{grid-template-columns:minmax(6.5rem,.8fr) minmax(4rem,1fr) 2.5rem;gap:.6rem}.step{grid-template-columns:minmax(0,1fr)}.event{grid-template-columns:5.5rem minmax(0,1fr) 1rem;padding-inline:.8rem}.mechanism{grid-template-columns:4.5rem 1fr}.gear{width:4rem}.gear::after{inset:1.75rem}.cta-row .btn{flex:1 1 100%}.fact-register{grid-template-columns:repeat(2,1fr)}}
+.system-board{margin:0}
+html,body{overflow-x:clip}
+.argument-item,.system-beat{opacity:1}.argument-item.is-current{background:color-mix(in srgb,var(--oxide) 7%,transparent)}.argument-item.is-current .n{background:var(--oxide);color:var(--sheet)}.system-beat.is-current{box-shadow:inset 3px 0 var(--oxide);padding-left:1rem}
+:root[data-layout="boxed"] .site-head,:root[data-layout="boxed"] main,:root[data-layout="boxed"] .imprint{width:min(1180px,calc(100% - 2rem))}
+.folio-nav{min-width:0;flex:1}.no-js pre{padding-top:1.5rem}.system-board[data-beat]:not([data-beat="all"]) .system-edge[data-active]{stroke:var(--rule);animation:none}.system-board[data-beat="1"]:not([data-beat="all"]) .system-edge[data-active~="1"],.system-board[data-beat="2"]:not([data-beat="all"]) .system-edge[data-active~="2"],.system-board[data-beat="3"]:not([data-beat="all"]) .system-edge[data-active~="3"],.system-board[data-beat="4"]:not([data-beat="all"]) .system-edge[data-active~="4"],.system-board[data-beat="5"]:not([data-beat="all"]) .system-edge[data-active~="5"]{stroke:var(--oxide);animation:system-flow 1.2s linear infinite}
+.system-mobile{display:none}.system-mobile-node{padding:.7rem .8rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font:600 .72rem var(--mono);text-align:center;opacity:.18;transition:opacity .35s var(--ease),border-color .35s var(--ease)}.system-mobile-node.core{background:var(--ink);color:var(--paper)}.system-board[data-beat="all"] .system-mobile-node,.system-board[data-beat="1"] .system-mobile-node[data-active~="1"],.system-board[data-beat="2"] .system-mobile-node[data-active~="2"],.system-board[data-beat="3"] .system-mobile-node[data-active~="3"],.system-board[data-beat="4"] .system-mobile-node[data-active~="4"],.system-board[data-beat="5"] .system-mobile-node[data-active~="5"]{opacity:1;border-color:var(--oxide)}.no-js .system-mobile-node{opacity:1}
+@container(max-width:1120px){.cover .display{font-size:clamp(3.35rem,8cqi,6.4rem)}.cover .sheet-title{font-size:clamp(2rem,4.25cqi,3rem)}}
+@container(max-width:1240px){.colophon .name-layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"context" "quote" "after";gap:2rem}.colophon .name-quote{font-size:clamp(1.65rem,4.2cqi,2rem)}.colophon .name-after{max-width:68ch}}
+:root[data-layout="boxed"] .cover .display{font-size:clamp(3.35rem,8.25cqi,6.8rem)}:root[data-layout="boxed"] .cover .sheet-title{font-size:clamp(2rem,4.25cqi,3.2rem)}.no-js #proof-test .proof-mark{animation:none;transform:translateY(-50%) scaleX(1)}
+@media(min-width:760px) and (max-width:1100px){:root[data-layout="boxed"] .cover .folio-body{grid-template-columns:minmax(0,1fr);gap:3.5rem}:root[data-layout="boxed"] .cover-copy{max-width:48rem}:root[data-layout="boxed"] .cover .display{font-size:clamp(4.8rem,10cqi,6.5rem)}:root[data-layout="boxed"] .cover-proof{grid-template-columns:minmax(20rem,1.1fr) minmax(14rem,.7fr);align-items:start;column-gap:2rem}:root[data-layout="boxed"] .cover-proof .run-sheet{grid-row:1/3}:root[data-layout="boxed"] .cover-proof .receipt-note{align-self:end;margin-top:0}:root[data-layout="boxed"] .cover-proof .fact-register{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:no-preference){.js #proof-test:not(.animate-marks) .proof-mark{animation:none;transform:translateY(-50%) scaleX(0)}.js #proof-test.animate-marks .proof-mark{animation:prove .65s calc(var(--i)*90ms) var(--ease) forwards}}
+@media(min-width:641px) and (max-width:960px){.system-story{display:flex;align-items:flex-start}.system-board{flex:1.2 1 0;align-self:flex-start;top:6rem}.system-board svg{display:none}.system-mobile{display:grid;gap:.35rem;padding:1rem}.system-beats{flex:.8 1 0;min-width:14rem;margin-top:0}.system-beat{min-height:48vh;padding:2rem 0}}
+@media(max-width:640px){:root[data-layout="boxed"] .site-head,:root[data-layout="boxed"] main,:root[data-layout="boxed"] .imprint{width:calc(100% - .5rem)}.folio-nav a:nth-child(n){display:flex}.progress-stage::after{display:none}.system-board svg{display:none}.system-mobile{display:grid;gap:.2rem;padding:.5rem}.system-mobile-node{padding:.35rem .45rem}.system-legend{display:none}}
+@media(prefers-reduced-motion:reduce){.system-mobile-node{opacity:1}}
+@media(pointer:coarse){.folio-nav a,.tab,.btn,.icon-button,.copy-code,.replay{min-height:3rem}}@media(hover:hover){.folio-nav a:hover{background:var(--sheet);color:var(--oxide)}.tab:hover:not([aria-selected="true"]){background:var(--rule-soft)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.reveal,.hero-line,.event,.argument-item,.system-beat,.system-node,.system-edge{opacity:1;transform:none}.progress-stage{display:none}.progressive{grid-template-columns:1fr}.argument-item,.system-beat{min-height:0}.system-board{position:relative;top:auto}.system-board .system-node,.system-board .system-edge{opacity:1!important}.proof-mark{transform:translateY(-50%) scaleX(1)}}
+@media print{.site-head,.skip,.icon-button,.route-controls,.copy-code,.replay,.progress-stage{display:none!important}.folio-grid{display:block}.rail{display:none}.folio-body{padding:2rem 0}.progressive,.system-story{display:block}.argument-item,.system-beat{min-height:0;opacity:1}.system-board{position:relative;top:auto}.system-node,.system-edge{opacity:1}.tab-panel[hidden]{display:block!important}.reveal{opacity:1;transform:none}.night{background:#fff;color:#111}.night .section-title,.night .subhead,.night .lede,.night .muted{color:#111}.event{opacity:1;transform:none}.imprint{background:#fff;color:#111;border-top:1px solid #111}}
+@media print{details:not([open])>*:not(summary){display:block!important}}
 </style>
 </head>
-<body>
-
-<nav>
-  <div class="wrap">
-    <a class="brand" href="#top"><i></i>jazari</a>
-    <a class="l" href="#origin">Origin</a>
-    <a class="l" href="#layers">Layers</a>
-    <a class="l" href="#standalone">CLI &amp; JSON</a>
-    <a class="l" href="#use">Usage</a>
-    <a class="l" href="#runs">Runs</a>
-    <a class="l" href="#mcp">MCP</a>
-    <a class="l" href="#why">Name</a>
-    <span class="spacer"></span>
-    <a class="navcta" href="https://github.com/nauman/jazari">GitHub</a>
-  </div>
-</nav>
-
-<header class="hero" id="top">
-  <div class="mesh" aria-hidden="true"></div>
-  <div class="wrap">
-    <p class="eyebrow">Ruby · Rails or CLI · PostgreSQL or SQLite · MIT</p>
-    <h1 class="kin" style="margin-top:14px">Procedures you can call.</h1>
-    <p class="lede" style="margin-top:22px">
-      Not documents you hope someone reads. Recipes as data, per-subject runbooks,
-      stable names for rituals that outlive any record, and per-run evidence — including
-      <strong>who or what acted</strong> — so <em>“did last night’s run actually complete?”</em>
-      is a query.
-    </p>
-    <p style="margin-top:18px;max-width:64ch">New in v0.8.0: run locally with a SQLite file,
-      send and receive JSON, or connect an MCP client over stdio. No PostgreSQL server
-      or Rails application needed. Ruby 3.2+ is required.</p>
-    <div class="cta">
-      <a class="btn p" href="https://rubygems.org/gems/jazari">gem install jazari</a>
-      <a class="btn" href="https://jazari.kuickr.co/README.md">Read the guides</a>
-      <a class="btn" href="#standalone">Try the CLI</a>
-    </div>
-
-    <div class="stats rv">
-      <div class="stat"><b data-count="4">0</b><span>layers</span></div>
-      <div class="stat"><b data-count="4">0</b><span>tables</span></div>
-      <div class="stat"><b data-count="135">0</b><span>tests</span></div>
-      <div class="stat"><b data-count="4">0</b><span>dependencies</span></div>
-    </div>
-
-    <div class="note rv" style="max-width:74ch;margin-top:34px">
-      <p><strong>State tells you what is done.</strong> Jazari runs also record the opaque
-      <span class="mono">actor_ref</span> — a human, agent, or system job — and attach that
-      identity to the evidence. Explicit actors win; trusted defaults and run inheritance keep
-      automated procedures simple without losing attribution.</p>
-    </div>
+<body data-kuickr-bar="peek">
+<a class="skip" href="#main">Skip to the Jazari story</a>
+<header class="site-head" data-source-row="01">
+  <div class="wrap head-inner">
+    <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>jazari</a>
+    <nav class="folio-nav" aria-label="Page folios">
+      <a href="#origin" data-n="02">Origin</a><a href="#layers" data-n="04">Model</a><a href="#standalone" data-n="05A">CLI &amp; JSON</a><a href="#use" data-n="05B">Usage</a><a href="#runs" data-n="06">Runs</a><a href="#mcp" data-n="07">MCP</a><a href="#why" data-n="08">Name</a><a href="#scope" data-n="09">Scope</a>
+    </nav>
+    <div class="head-action"><button class="icon-button" id="layout-toggle" type="button" aria-label="Use boxed layout" title="Compare boxed layout">BOX</button><button class="icon-button" id="theme" type="button" aria-label="Switch to dark ledger" title="Switch theme">DARK</button><a class="github" href="https://github.com/nauman/jazari">GitHub</a></div>
   </div>
 </header>
 
-<!-- ══ origin — the road here ════════════════════════════════════════════ -->
-<section class="band" id="origin">
-  <div class="wrap">
-    <p class="eyebrow rv">Where this came from</p>
-    <h2 class="rv" style="margin-top:10px">This started as an MCP mistake.</h2>
-    <p class="lede rv" style="margin-top:18px">
-      Four MCP servers in Ruby and Rails, and the first one was built the way everyone
-      builds their first one: <strong>as another REST API</strong>. One tool per endpoint.
-    </p>
+<main id="main" tabindex="-1">
+<section class="folio cover" id="top" data-source-row="02" data-motion-role="hero">
+  <div class="folio-grid"><aside class="rail"><span>Folio 01 · Cover</span></aside><div class="folio-body">
+    <div class="cover-copy">
+      <p class="eyebrow hero-meta">Ruby · Rails or CLI · PostgreSQL or SQLite · MIT</p>
+      <h1 class="display"><span class="hero-line">Procedures </span><span class="hero-line">you can </span><span class="hero-line"><em>call.</em></span></h1>
+      <p class="lede">Not documents you hope someone reads. Ordered checklists as recipe data, per-subject runbooks, stable names for rituals that outlive any record, and per-run evidence — including <strong>who or what acted</strong> — so <em>“did last night’s run actually complete?”</em> is a query.</p>
+      <p class="body-copy" style="margin-top:1.25rem">New in v0.8.0: run locally with a SQLite file, send and receive JSON, or connect an MCP client over stdio. No PostgreSQL server or Rails application needed. Ruby 3.2+ is required.</p>
+      <div class="cta-row"><a class="btn primary" href="https://rubygems.org/gems/jazari">gem install jazari</a><a class="btn" href="https://jazari.kuickr.co/README.md">Read the guides</a><a class="btn" href="#standalone">Try the CLI</a></div>
+    </div>
+    <div class="cover-proof">
+      <article class="run-sheet" aria-label="Visual rendering of completed Run 4412">
+        <div class="sheet-head"><span>Jazari / Run</span><span>#4412</span></div>
+        <h2 class="sheet-title">Backup verification</h2>
+        <div class="sheet-row"><span>Procedure</span><b>backup.verify.v1</b></div><div class="sheet-row"><span>Actor</span><b>agent:nightly</b></div><div class="sheet-row"><span>Evidence</span><b>4211 rows</b></div><div class="sheet-row"><span>Outcome</span><b class="status">completed</b></div>
+        <span class="stamp" aria-hidden="true">Verified · 3/3</span>
+      </article>
+      <p class="receipt-note">Receipt is presentation language. The checklist travels through the product model: Recipe → Runbook or Queue → Run snapshot.</p>
+      <div class="fact-register reveal" aria-label="Project facts"><div class="fact"><b data-count="4">4</b><span>layers</span></div><div class="fact"><b data-count="4">4</b><span>tables</span></div><div class="fact"><b data-count="135">135</b><span>tests</span></div><div class="fact"><b data-count="4">4</b><span>dependencies</span></div></div>
+    </div>
+    <div class="annotation reveal" style="grid-column:1/-1"><p><strong>State tells you what is done.</strong> Jazari runs also record the opaque <span class="mono">actor_ref</span> — a human, agent, or system job — and attach that identity to the evidence. Explicit actors win; trusted defaults and run inheritance keep automated procedures simple without losing attribution.</p></div>
+  </div></div>
+</section>
 
-    <div class="split rv" style="margin-top:38px">
-      <div>
-        <p>That surface grows the way an API grows, except an agent has to <em>read all of
-        it</em> before deciding anything. It had to be reconciled — a sprawl of endpoint-shaped
-        tools collapsed down to roughly fifteen, grouped by what someone is actually
-        trying to accomplish.</p>
-        <p style="margin-top:16px">The lesson is not "fewer tools". It is that <strong>MCP
-        is an adapter, not a layer</strong>. Business operations, queries and authorization
-        belong in shared services; REST and MCP are both thin skins over them. REST stays
-        resource-oriented. MCP should be a small set of <strong>task-oriented</strong>
-        tools shaped around an agent's goal.</p>
-        <p style="margin-top:16px">Which makes MCP feel closer to a standardised RPC — or
-        an old SOAP-style service contract — than to REST. That is fine. What is not fine
-        is letting it quietly become a <em>second service layer</em> with its own copy of
-        the rules.</p>
+<section class="folio" id="origin" data-source-row="03-04">
+  <div class="folio-grid"><aside class="rail"><span>Folio 02 · Memorandum</span></aside><div class="folio-body">
+    <p class="eyebrow reveal">Where this came from</p><h2 class="section-title reveal">This started as an MCP mistake.</h2>
+    <p class="lede reveal">Four MCP servers in Ruby and Rails, and the first one was built the way everyone builds their first one: <strong>as another REST API</strong>. One tool per endpoint.</p>
+    <div class="two-up" style="margin-top:3rem"><div class="body-copy reveal"><p>That surface grows the way an API grows, except an agent has to <em>read all of it</em> before deciding anything. It had to be reconciled — a sprawl of endpoint-shaped tools collapsed down to roughly fifteen, grouped by what someone is actually trying to accomplish.</p><p>The lesson is not "fewer tools". It is that <strong>MCP is an adapter, not a layer</strong>. Business operations, queries and authorization belong in shared services; REST and MCP are both thin skins over them. REST stays resource-oriented. MCP should be a small set of <strong>task-oriented</strong> tools shaped around an agent's goal.</p><p>Which makes MCP feel closer to a standardised RPC — or an old SOAP-style service contract — than to REST. That is fine. What is not fine is letting it quietly become a <em>second service layer</em> with its own copy of the rules.</p></div>
+      <div class="correction reveal"><div><small>THE MISTAKE</small><h3>One tool per endpoint</h3><p>The MCP surface mirrors the routes file. Every new endpoint is a new tool. The agent reads a catalogue of verbs and has to assemble the intent itself.</p><span class="question">“what can I call?”</span></div><div><small>THE CORRECTION</small><h3>A few tools per job</h3><p>The MCP surface mirrors intentions. Tools group around outcomes, and both adapters call the same service — so authorization cannot drift between them.</p><span class="question">“what am I trying to do?”</span></div></div>
+    </div>
+    <div class="annotation reveal"><p>Working this way across four projects changed a different question entirely: <strong>why does operational knowledge live permanently inside a repo?</strong> Why is <span class="mono">deploy.md</span> a file, next to the code, in one repository, when the procedure it describes governs a fleet?</p></div>
+    <h3 class="subhead reveal" style="margin-top:4rem">A document cannot be called</h3><p class="lede reveal">A markdown runbook is a fine thing to read and a useless thing to <em>operate</em>. It has no state, no evidence, no revision guard, and no answer to “is anyone doing this right now?” Committing it harder does not fix any of that.</p>
+    <div class="progressive reveal" data-scroll-story="argument"><aside class="progress-stage" data-step="1" aria-hidden="true"><div class="stage-head"><span>Argument / fixed plate</span><span data-stage-count>01—04</span></div><div class="stage-viewport"><div class="stage-state" data-state="1"><span class="stage-n">01 / STATE</span><strong>Attach it.</strong><small>The checklist becomes queryable, but only while it belongs to a record.</small></div><div class="stage-state" data-state="2"><span class="stage-n">02 / GAP</span><strong>No record.</strong><small>Rituals without a subject fall straight back into prose.</small></div><div class="stage-state" data-state="3"><span class="stage-n">03 / ADDRESS</span><strong>Name it.</strong><small>A stable queue name makes a recordless ritual callable.</small></div><div class="stage-state" data-state="4"><span class="stage-n">04 / PROOF</span><strong>Keep the run.</strong><small>Each execution retains its own ticks, evidence, actor and outcome.</small></div></div><div class="stage-meter"><span></span></div></aside><div class="argument"><article class="argument-item is-current" data-progress-step="1"><span class="n">01</span><div class="argument-copy"><h3>Attach a checklist</h3><p>Bolt items onto the record — a deploy, a site, an app. Real progress: state becomes queryable. This is where most systems stop.</p><span class="question">solved: current state</span></div></article><article class="argument-item" data-progress-step="2"><span class="n">02</span><div class="argument-copy"><h3>Some rituals own no record</h3><p>Onboarding. Incident triage. The weekly review. There is no row to hang them on, so they fall back to prose — the exact problem, returning.</p><span class="question">unsolved: everything else</span></div></article><article class="argument-item" data-progress-step="3"><span class="n">03</span><div class="argument-copy"><h3>A stable name is enough</h3><p>A queue is a ritual addressed by <em>name</em>, needing no record at all — and read-only by construction, because a ritual has exactly one editable home: its recipe.</p><span class="question">“run incident-triage”</span></div></article><article class="argument-item" data-progress-step="4"><span class="n">04</span><div class="argument-copy"><h3>Resetting destroys evidence</h3><p>A checklist you reset to run again has erased the proof it ever ran. Runs make each execution its own object, with ticks, evidence and an outcome.</p><span class="question">“did last night complete?”</span></div></article></div></div>
+    <div class="annotation reveal"><p>Where it landed, in one line: <strong>rituals live in jazari</strong>; the vocabulary stays a registry, because a lexicon is not a procedure; and resume becomes subject-scoped by composing <span class="mono">resolve</span> against the canon. The host names what a thing <em>is</em> and points at a recipe id. Nothing else crosses the boundary — the gem never learns your fleet, and you never wait on a gem release to fix a step.</p></div>
+  </div></div>
+</section>
+
+<section class="folio failure" id="problem" data-source-row="05" data-motion-role="proof-marks">
+  <div class="folio-grid"><aside class="rail"><span>Folio 03 · Failure test</span></aside><div class="folio-body">
+    <p class="eyebrow reveal">The problem</p><h2 class="section-title reveal">A checklist knows its state.<br>It knows nothing else.</h2><p class="lede reveal">Four questions an attached checklist cannot answer — and the one that matters most is the one it destroys when you reset it.</p>
+    <div class="proof-test reveal" id="proof-test"><div class="proof-row good" style="--i:0"><span class="label">Current state</span><span class="proof-track"><span class="proof-mark"></span></span><span class="proof-result">✓ yes</span></div><div class="proof-row bad" style="--i:1"><span class="label">Is it current?</span><span class="proof-track"><span class="proof-mark"></span></span><span class="proof-result">× no</span></div><div class="proof-row bad" style="--i:2"><span class="label">Who ran it?</span><span class="proof-track"><span class="proof-mark"></span></span><span class="proof-result">× no</span></div><div class="proof-row bad" style="--i:3"><span class="label">What did they see?</span><span class="proof-track"><span class="proof-mark"></span></span><span class="proof-result">× no</span></div><div class="proof-row bad" style="--i:4"><span class="label">Did it complete?</span><span class="proof-track"><span class="proof-mark"></span></span><span class="proof-result">× no</span></div></div>
+    <div class="annotation reveal"><p>The usual fix is a checklist attached to a record. That helps, then runs out: some procedures belong to <strong>no record at all</strong>, and a checklist you <span class="mono">reset</span> to run again has just destroyed the evidence it ever ran.</p></div>
+  </div></div>
+</section>
+
+<section class="folio" id="layers" data-source-row="06">
+  <div class="folio-grid"><aside class="rail"><span>Folio 04 · Register</span></aside><div class="folio-body"><p class="eyebrow reveal">The mechanism</p><h2 class="section-title reveal">Four layers</h2><p class="lede reveal">Each answers a question the one above it cannot. Most systems stop at the second.</p>
+    <div class="register reveal"><details name="jazari-layer" open><summary><span class="roman">I</span><strong>Recipe</strong><span>The canon</span></summary><div class="register-copy"><p>How this ritual is done: its ordered checklist and run policy, stored as data. It is operator-editable and digest-versioned, so fixing a step is a write, not a deploy.</p><span class="question">“what steps define this ritual?”</span></div></details><details name="jazari-layer"><summary><span class="roman">II</span><strong>Runbook</strong><span>One subject’s override</span></summary><div class="register-copy"><p>How <em>this</em> record’s checklist differs from the recipe. It materialises on first edit; reading the default checklist writes nothing.</p><span class="question">“which steps differ for THIS one?”</span></div></details><details name="jazari-layer"><summary><span class="roman">III</span><strong>Queue</strong><span>A name you can always call</span></summary><div class="register-copy"><p>A stable name for a recipe checklist that belongs to no record. The name remains callable while the recipe stays its single editable home.</p><span class="question">“which checklist do I call?”</span></div></details><details name="jazari-layer"><summary><span class="roman">IV</span><strong>Run</strong><span>One execution</span></summary><div class="register-copy"><p>A snapshot of the resolved checklist, then its actor, item ticks, per-item evidence and outcome. Later recipe edits cannot rewrite what this run used.</p><span class="question">“what happened to every step?”</span></div></details></div>
+    <div class="system-intro reveal"><div><p class="eyebrow">Whole system / one plate</p><h3 class="subhead">Follow one checklist from canon to proof.</h3></div><p>The plate stays fixed while each operational boundary comes into focus. Callers execute the work; Jazari resolves the checklist, snapshots it for the run, and retains each tick and its evidence.</p></div>
+    <div class="system-story reveal" data-scroll-story="system"><figure class="system-board" data-beat="1"><figcaption class="system-board-head"><span>Jazari procedure system</span><span data-system-count>01 / 05</span></figcaption><svg viewBox="0 0 760 560" role="img" aria-labelledby="system-title system-desc"><title id="system-title">Jazari checklist and procedure system</title><desc id="system-desc">Ruby, JSON, and MCP adapters call shared operations. Operations resolve an ordered recipe checklist through a subject runbook or stable queue, snapshot that checklist into a run, and retain its actor, item ticks, evidence, and outcome.</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="var(--oxide)"/></marker></defs>
+      <path class="system-edge" data-active="3" d="M125 80C125 108 330 92 330 120" marker-end="url(#arrow)"/><path class="system-edge" data-active="3" d="M380 80V120" marker-end="url(#arrow)"/><path class="system-edge" data-active="3" d="M635 80C635 108 430 92 430 120" marker-end="url(#arrow)"/><path class="system-edge" data-active="3" d="M380 174V205" marker-end="url(#arrow)"/><path class="system-edge" data-active="1 2" d="M225 232H295" marker-end="url(#arrow)"/><path class="system-edge" data-active="2" d="M380 261C380 280 270 270 270 292" marker-end="url(#arrow)"/><path class="system-edge" data-active="2" d="M380 261C380 280 530 270 530 292" marker-end="url(#arrow)"/><path class="system-edge" data-active="4" d="M270 348C270 380 380 365 380 390" marker-end="url(#arrow)"/><path class="system-edge" data-active="4" d="M530 348C530 380 380 365 380 390" marker-end="url(#arrow)"/><path class="system-edge" data-active="4" d="M380 444V470" marker-end="url(#arrow)"/><path class="system-edge" data-active="5" d="M445 500H590" marker-end="url(#arrow)"/>
+      <g class="system-node" data-active="3" transform="translate(80 30)"><rect width="90" height="50"/><text x="45" y="21" text-anchor="middle">RUBY</text><text class="node-note" x="45" y="37" text-anchor="middle">embed</text></g><g class="system-node" data-active="3" transform="translate(335 30)"><rect width="90" height="50"/><text x="45" y="21" text-anchor="middle">JSON</text><text class="node-note" x="45" y="37" text-anchor="middle">local</text></g><g class="system-node" data-active="3" transform="translate(590 30)"><rect width="90" height="50"/><text x="45" y="21" text-anchor="middle">MCP</text><text class="node-note" x="45" y="37" text-anchor="middle">stdio</text></g>
+      <g class="system-node core" data-active="3" transform="translate(295 120)"><rect width="170" height="54"/><text x="85" y="24" text-anchor="middle">OPERATIONS</text><text class="node-note" x="85" y="41" text-anchor="middle">shared rules + auth</text></g><g class="system-node core" data-active="1 2" transform="translate(55 205)"><rect width="170" height="54"/><text x="85" y="24" text-anchor="middle">RECIPE</text><text class="node-note" x="85" y="41" text-anchor="middle">canon + checklist</text></g><g class="system-node" data-active="2 3" transform="translate(295 205)"><rect width="170" height="56"/><text x="85" y="24" text-anchor="middle">RESOLVE</text><text class="node-note" x="85" y="42" text-anchor="middle">one editable home</text></g>
+      <g class="system-node" data-active="2 4" transform="translate(190 292)"><rect width="160" height="56"/><text x="80" y="24" text-anchor="middle">RUNBOOK</text><text class="node-note" x="80" y="42" text-anchor="middle">checklist override</text></g><g class="system-node" data-active="2 4" transform="translate(450 292)"><rect width="160" height="56"/><text x="80" y="24" text-anchor="middle">QUEUE</text><text class="node-note" x="80" y="42" text-anchor="middle">named recipe checklist</text></g><g class="system-node" data-active="4" transform="translate(295 390)"><rect width="170" height="54"/><text x="85" y="23" text-anchor="middle">CHECKLIST</text><text class="node-note" x="85" y="40" text-anchor="middle">resolved snapshot</text></g><g class="system-node core" data-active="4 5" transform="translate(315 470)"><rect width="130" height="60"/><text x="65" y="26" text-anchor="middle">RUN</text><text class="node-note" x="65" y="44" text-anchor="middle">one execution</text></g><g class="system-node" data-active="5" transform="translate(590 459)"><rect width="120" height="82"/><text x="60" y="21" text-anchor="middle">PROOF</text><text class="node-note" x="60" y="39" text-anchor="middle">actor · item ticks</text><text class="node-note" x="60" y="55" text-anchor="middle">item evidence</text><text class="node-note" x="60" y="71" text-anchor="middle">outcome</text></g>
+    </svg><div class="system-mobile" role="img" aria-label="Jazari system: Ruby, JSON, and MCP call shared operations; operations resolve an ordered recipe checklist through a runbook or queue; opening a run snapshots that checklist and retains its actor, item ticks, evidence, and outcome."><span class="system-mobile-node" data-active="3">Ruby · JSON · MCP</span><span class="system-mobile-node core" data-active="3">Shared operations</span><span class="system-mobile-node core" data-active="1 2">Recipe / ordered checklist</span><span class="system-mobile-node" data-active="2 3">Resolve target</span><span class="system-mobile-node" data-active="2 4">Runbook override or named Queue</span><span class="system-mobile-node" data-active="4">Resolved checklist snapshot</span><span class="system-mobile-node core" data-active="4 5">Run / one execution</span><span class="system-mobile-node" data-active="5">Actor · item ticks · item evidence · outcome</span></div><div class="system-legend"><span>caller executes</span><span>Jazari resolves checklist</span><span>Jazari records proof</span></div></figure><div class="system-beats"><article class="system-beat is-current" data-system-beat="1"><span class="n">01 / DEFINE</span><h3>The recipe owns the checklist</h3><p>Write the ordered steps and run policy as data. The recipe is the digest-versioned canon, editable without shipping code.</p><span class="question">what steps define this ritual?</span></article><article class="system-beat" data-system-beat="2"><span class="n">02 / ADDRESS</span><h3>Resolve its current checklist</h3><p>A runbook may override the steps for one record. A queue gives the recipe checklist a stable name when no record exists.</p><span class="question">which checklist am I calling?</span></article><article class="system-beat" data-system-beat="3"><span class="n">03 / CALL</span><h3>Choose the adapter</h3><p>Embed it in Ruby, exchange versioned JSON locally, or expose a small task-shaped MCP surface.</p><span class="question">how does my machine call it?</span></article><article class="system-beat" data-system-beat="4"><span class="n">04 / RUN</span><h3>Snapshot the checklist</h3><p>Opening a run copies the resolved checklist into that execution. Later recipe or runbook edits cannot rewrite what the caller used.</p><span class="question">what steps did this run receive?</span></article><article class="system-beat" data-system-beat="5"><span class="n">05 / PROVE</span><h3>Retain every item’s proof</h3><p>The run keeps its actor, checklist ticks, per-item evidence and outcome after the editable checklist has moved on.</p><span class="question">what happened to every step?</span></article></div></div>
+  </div></div>
+</section>
+
+<section class="folio routes" id="routes" data-source-row="07-08" data-motion-role="tabs">
+  <div class="folio-grid"><aside class="rail"><span>Folio 05 · Operating routes</span></aside><div class="folio-body"><p class="eyebrow reveal">Two operating routes</p><h2 class="section-title reveal">Local tool or embedded library.</h2><p class="lede reveal">Standalone and embedded are peers. Pick the route that matches your machine; both keep the same procedure model and evidence.</p>
+    <div class="tablist route-controls reveal" role="tablist" aria-label="Operating route"><button class="tab" id="route-standalone-tab" type="button" role="tab" aria-selected="true" aria-controls="standalone" tabindex="0">Standalone · CLI &amp; JSON</button><button class="tab" id="route-ruby-tab" type="button" role="tab" aria-selected="false" aria-controls="use" tabindex="-1">Embedded · Ruby &amp; Rails</button></div>
+    <section class="tab-panel" id="standalone" role="tabpanel" aria-labelledby="route-standalone-tab"><div class="route-heading"><p class="kicker">Standalone · v0.8.1</p><h3>A local file. A JSON conversation.</h3><p class="lede">SQLite stores your procedure state. The versioned <span class="mono">jazari/v1</span> interface lets any language call it. Jazari starts when you call it and exits when the work is recorded.</p></div>
+      <div class="steps">
+        <article class="step"><span class="step-n">01</span><div class="step-body"><h4>1 · Install and discover</h4><p>With Ruby 3.2+ installed, these commands create a local SQLite database and report the available features. No database server, daemon, or network listener.</p><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><code>gem install jazari -v '~&gt; 0.8.1'
+jazari capabilities --database .jazari/jazari.sqlite3</code></pre></div></div></article>
+        <article class="step"><span class="step-n">02</span><div class="step-body"><h4>2 · Send JSON, receive JSON</h4><p>This first request works without seeding a recipe. Send a JSON file with <span class="mono">--request request.json</span>, or pipe a request through stdin:</p><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><code>printf '%s\n' '{"protocol":"jazari/v1","request_id":"hello","action":"capabilities","arguments":{}}' \
+  | jazari call --database .jazari/jazari.sqlite3 --request -</code></pre></div><p>The response identifies SQLite storage and the CLI and MCP stdio transports. Recipe, runbook, run, and evidence operations use the same interface, with revision checks on writes and structured error codes.</p><p><a href="https://github.com/nauman/jazari/tree/v0.8.1/protocol/v1">Read the JSON schemas and conformance fixtures</a>.</p></div></article>
+        <article class="step"><span class="step-n">03</span><div class="step-body"><h4>3 · Load your procedures or connect an agent</h4><p>Seed your YAML or JSON recipe files. Existing recipes keep the operator's edits.</p><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><code>jazari recipes seed config/recipes --database .jazari/jazari.sqlite3</code></pre></div><p>To connect an MCP client, configure it to launch this command with an absolute database path. The server exposes one <span class="mono">jazari</span> tool and speaks JSON-RPC over stdio.</p><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><code>jazari mcp stdio --database /absolute/path/to/jazari.sqlite3</code></pre></div><p>Runs retain snapshots, actor attribution, and evidence across calls. Your calling application handles authorization and executes the procedure.</p><a class="btn" href="https://jazari.kuickr.co/07-standalone.md">Standalone guide</a></div></article>
       </div>
-      <div class="cards" style="margin-top:0">
-        <div class="card"><span class="n">THE MISTAKE</span>
-          <h3>One tool per endpoint</h3>
-          <p>The MCP surface mirrors the routes file. Every new endpoint is a new tool. The
-            agent reads a catalogue of verbs and has to assemble the intent itself.</p>
-          <span class="q">“what can I call?”</span></div>
-        <div class="card"><span class="n">THE CORRECTION</span>
-          <h3>A few tools per job</h3>
-          <p>The MCP surface mirrors intentions. Tools group around outcomes, and both
-            adapters call the same service — so authorization cannot drift between them.</p>
-          <span class="q">“what am I trying to do?”</span></div>
-      </div>
-    </div>
-
-    <div class="note rv" style="max-width:70ch;margin-top:44px">
-      <p>Working this way across four projects changed a different question entirely:
-      <strong>why does operational knowledge live permanently inside a repo?</strong>
-      Why is <span class="mono">deploy.md</span> a file, next to the code, in one repository,
-      when the procedure it describes governs a fleet?</p>
-    </div>
-
-    <h3 class="rv" style="margin-top:52px;font-size:clamp(20px,2.4vw,26px)">A document cannot be called</h3>
-    <p class="lede rv" style="margin-top:14px;max-width:70ch">
-      A markdown runbook is a fine thing to read and a useless thing to <em>operate</em>.
-      It has no state, no evidence, no revision guard, and no answer to
-      “is anyone doing this right now?” Committing it harder does not fix any of that.
-    </p>
-
-    <div class="cards c4 rv" style="margin-top:34px">
-      <div class="card"><span class="n">STEP ONE</span>
-        <h3>Attach a checklist</h3>
-        <p>Bolt items onto the record — a deploy, a site, an app. Real progress: state
-          becomes queryable. This is where most systems stop.</p>
-        <span class="q">solved: current state</span></div>
-      <div class="card"><span class="n">THE WALL</span>
-        <h3>Some rituals own no record</h3>
-        <p>Onboarding. Incident triage. The weekly review. There is no row to hang them on,
-          so they fall back to prose — the exact problem, returning.</p>
-        <span class="q">unsolved: everything else</span></div>
-      <div class="card"><span class="n">SO · QUEUES</span>
-        <h3>A stable name is enough</h3>
-        <p>A queue is a ritual addressed by <em>name</em>, needing no record at all — and
-          read-only by construction, because a ritual has exactly one editable home: its recipe.</p>
-        <span class="q">“run incident-triage”</span></div>
-      <div class="card"><span class="n">AND · RUNS</span>
-        <h3>Resetting destroys evidence</h3>
-        <p>A checklist you reset to run again has erased the proof it ever ran. Runs make
-          each execution its own object, with ticks, evidence and an outcome.</p>
-        <span class="q">“did last night complete?”</span></div>
-    </div>
-
-    <div class="note rv" style="max-width:74ch;margin-top:44px">
-      <p>Where it landed, in one line: <strong>rituals live in jazari</strong>; the
-      vocabulary stays a registry, because a lexicon is not a procedure; and resume becomes
-      subject-scoped by composing <span class="mono">resolve</span> against the canon.
-      The host names what a thing <em>is</em> and points at a recipe id. Nothing else
-      crosses the boundary — the gem never learns your fleet, and you never wait on a gem
-      release to fix a step.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ══ the problem, as a chart ═══════════════════════════════════════════ -->
-<section class="band alt" id="problem">
-  <div class="wrap">
-    <p class="eyebrow rv">The problem</p>
-    <h2 class="rv" style="margin-top:10px">A checklist knows its state.<br>It knows nothing else.</h2>
-    <p class="lede rv" style="margin-top:18px">Four questions an attached checklist cannot answer —
-      and the one that matters most is the one it destroys when you reset it.</p>
-
-    <div class="chart rv" id="chart">
-      <div class="row"><span>Current state</span>
-        <div class="track"><div class="fill good" data-w="100"></div></div><span class="v">yes</span></div>
-      <div class="row"><span>Is it current?</span>
-        <div class="track"><div class="fill" data-w="0"></div></div><span class="v">no</span></div>
-      <div class="row"><span>Who ran it?</span>
-        <div class="track"><div class="fill" data-w="0"></div></div><span class="v">no</span></div>
-      <div class="row"><span>What did they see?</span>
-        <div class="track"><div class="fill" data-w="0"></div></div><span class="v">no</span></div>
-      <div class="row"><span>Did it complete?</span>
-        <div class="track"><div class="fill" data-w="0"></div></div><span class="v">no</span></div>
-    </div>
-
-    <div class="note rv" style="max-width:66ch">
-      <p>The usual fix is a checklist attached to a record. That helps, then runs out: some
-      procedures belong to <strong>no record at all</strong>, and a checklist you
-      <span class="mono">reset</span> to run again has just destroyed the evidence it ever ran.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ══ four layers as cards ══════════════════════════════════════════════ -->
-<section class="band" id="layers">
-  <div class="wrap">
-    <p class="eyebrow rv">The mechanism</p>
-    <h2 class="rv" style="margin-top:10px">Four layers</h2>
-    <p class="lede rv" style="margin-top:16px">Each answers a question the one above it cannot.
-      Most systems stop at the second.</p>
-
-    <div class="cards c4 rv">
-      <div class="card"><span class="n">I · RECIPE</span>
-        <h3>The canon</h3>
-        <p>How this ritual is done. Data, not code — operator-editable at runtime and
-          digest-versioned, so fixing a procedure is a write, not a deploy.</p>
-        <span class="q">“how is this done?”</span></div>
-      <div class="card"><span class="n">II · RUNBOOK</span>
-        <h3>One subject’s override</h3>
-        <p>How <em>this</em> record differs. Materialised on first edit; reading a default
-          writes nothing at all.</p>
-        <span class="q">“how does THIS one differ?”</span></div>
-      <div class="card"><span class="n">III · QUEUE</span>
-        <h3>A name you can always call</h3>
-        <p>For rituals that belong to no record. The name is the contract, so whatever
-          carries the truth today can move without breaking the call.</p>
-        <span class="q">“what do I call it?”</span></div>
-      <div class="card"><span class="n">IV · RUN</span>
-        <h3>One execution</h3>
-        <p>Who, when, which ticks, what evidence. The layer most systems skip — and the one
-          that makes the opening question answerable.</p>
-        <span class="q">“did it actually happen?”</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- ══ standalone SQLite + JSON ════════════════════════════════════════ -->
-<section class="band" id="standalone">
-  <div class="wrap">
-    <p class="eyebrow rv">Standalone · v0.8.1</p>
-    <h2 class="rv" style="margin-top:10px">A local file. A JSON conversation.</h2>
-    <p class="lede rv" style="margin-top:16px">SQLite stores your procedure state.
-      The versioned <span class="mono">jazari/v1</span> interface lets any language
-      call it. Jazari starts when you call it and exits when the work is recorded.</p>
-
-    <div class="rv" style="margin-top:30px">
-      <h3 style="margin-bottom:12px">1 · Install and discover</h3>
-      <p>With Ruby 3.2+ installed, these commands create a local SQLite database and
-        report the available features. No database server, daemon, or network listener.</p>
-      <pre><code>gem install jazari -v '~&gt; 0.8.1'
-jazari capabilities --database .jazari/jazari.sqlite3</code></pre>
-    </div>
-
-    <div class="rv" style="margin-top:30px">
-      <h3 style="margin-bottom:12px">2 · Send JSON, receive JSON</h3>
-      <p>This first request works without seeding a recipe. Send a JSON file with
-        <span class="mono">--request request.json</span>, or pipe a request through stdin:</p>
-      <pre><code>printf '%s\n' '{"protocol":"jazari/v1","request_id":"hello","action":"capabilities","arguments":{}}' \
-  | jazari call --database .jazari/jazari.sqlite3 --request -</code></pre>
-      <p style="margin-top:14px">The response identifies SQLite storage and the CLI and
-        MCP stdio transports. Recipe, runbook, run, and evidence operations use the same
-        interface, with revision checks on writes and structured error codes.</p>
-      <p><a href="https://github.com/nauman/jazari/tree/v0.8.1/protocol/v1">Read the JSON schemas and conformance fixtures</a>.</p>
-    </div>
-
-    <div class="rv" style="margin-top:30px">
-      <h3 style="margin-bottom:12px">3 · Load your procedures or connect an agent</h3>
-      <p>Seed your YAML or JSON recipe files. Existing recipes keep the operator's edits.</p>
-      <pre><code>jazari recipes seed config/recipes --database .jazari/jazari.sqlite3</code></pre>
-      <p style="margin-top:18px">To connect an MCP client, configure it to launch this command
-        with an absolute database path. The server exposes one <span class="mono">jazari</span>
-        tool and speaks JSON-RPC over stdio.</p>
-      <pre><code>jazari mcp stdio --database /absolute/path/to/jazari.sqlite3</code></pre>
-      <p style="margin-top:14px">Runs retain snapshots, actor attribution, and evidence across
-        calls. Your calling application handles authorization and executes the procedure.</p>
-      <a class="btn" href="https://jazari.kuickr.co/07-standalone.md">Standalone guide</a>
-    </div>
-  </div>
-</section>
-
-<!-- ══ code, tabbed ══════════════════════════════════════════════════════ -->
-<section class="band alt" id="use">
-  <div class="wrap">
-    <p class="eyebrow rv">Embedded Ruby &amp; Rails</p>
-    <h2 class="rv" style="margin-top:10px">Inside your application</h2>
-    <p class="lede rv" style="margin-top:16px">Seed a procedure. Address it by name. Open a run,
-      work it, attach what you saw.</p>
-
-    <div class="rv" style="margin-top:32px">
-      <div class="codebar" role="tablist">
-        <button class="tab" role="tab" aria-selected="true" data-p="p1">1 · seed</button>
-        <button class="tab" role="tab" aria-selected="false" data-p="p2">2 · address</button>
-        <button class="tab" role="tab" aria-selected="false" data-p="p3">3 · run it</button>
-        <button class="tab" role="tab" aria-selected="false" data-p="p4">4 · answer</button>
-        <button class="tab" role="tab" aria-selected="false" data-p="p5">install</button>
-      </div>
-      <div class="pane on" id="p1"><pre><span class="cm"># Your content, never the gem's — it ships zero recipes.</span>
+    </section>
+    <section class="tab-panel" id="use" role="tabpanel" aria-labelledby="route-ruby-tab" hidden><div class="route-heading"><p class="kicker">Embedded Ruby &amp; Rails</p><h3>Inside your application</h3><p class="lede">Seed a procedure. Address it by name. Open a run, work it, attach what you saw.</p></div>
+      <div class="code-index"><div class="tablist" role="tablist" aria-label="Ruby integration stages"><button class="tab" id="code-seed-tab" type="button" role="tab" aria-selected="true" aria-controls="code-seed" tabindex="0">1 · seed</button><button class="tab" id="code-address-tab" type="button" role="tab" aria-selected="false" aria-controls="code-address" tabindex="-1">2 · address</button><button class="tab" id="code-run-tab" type="button" role="tab" aria-selected="false" aria-controls="code-run" tabindex="-1">3 · run it</button><button class="tab" id="code-answer-tab" type="button" role="tab" aria-selected="false" aria-controls="code-answer" tabindex="-1">4 · answer</button><button class="tab" id="code-install-tab" type="button" role="tab" aria-selected="false" aria-controls="code-install" tabindex="-1">install</button></div>
+        <section class="tab-panel" id="code-seed" role="tabpanel" aria-labelledby="code-seed-tab"><h4 class="no-js-heading">1 · Seed</h4><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><span class="cm"># Your content, never the gem's — it ships zero recipes.</span>
 <b>Jazari::RecipeRegistry</b>.seed!([
   { id: <span class="s">"backup.verify.v1"</span>,
     topic: <span class="s">"Prove a backup by restoring it"</span>,
@@ -475,9 +166,8 @@ jazari capabilities --database .jazari/jazari.sqlite3</code></pre>
 <span class="cm"># YAML/JSON files are seeds; drift is reported, never overwritten.</span>
 entries = <b>Jazari::RecipeFiles</b>.load(<span class="s">"config/recipes"</span>)
 <b>Jazari::RecipeRegistry</b>.seed!(entries)
-<b>Jazari::RecipeFiles</b>.drift(entries)</pre></div>
-
-      <div class="pane" id="p2"><pre><span class="cm"># A queue: a stable name for a ritual that belongs to no record.</span>
+<b>Jazari::RecipeFiles</b>.drift(entries)</pre></div></section>
+        <section class="tab-panel" id="code-address" role="tabpanel" aria-labelledby="code-address-tab" hidden><h4 class="no-js-heading">2 · Address</h4><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><span class="cm"># A queue: a stable name for a ritual that belongs to no record.</span>
 target = <b>Jazari::QueueTarget</b>.new(
   queue: <span class="s">"backup-verify"</span>,
   public_reference: { kind: <span class="s">"queue"</span> },
@@ -490,9 +180,8 @@ target = <b>Jazari::QueueTarget</b>.new(
 <span class="cm"># Or attach to a record you own — you authorize first, always.</span>
 <b>Jazari::RecordTarget</b>.new(runbookable: site,
   public_reference: { kind: <span class="s">"site"</span>, site: site.slug },
-  recipe_id: <span class="s">"site.maintenance.v1"</span>)</pre></div>
-
-      <div class="pane" id="p3"><pre>result = <b>Jazari</b>.open_run(target: target, actor_ref: <span class="s">"agent:nightly"</span>)
+  recipe_id: <span class="s">"site.maintenance.v1"</span>)</pre></div></section>
+        <section class="tab-panel" id="code-run" role="tabpanel" aria-labelledby="code-run-tab" hidden><h4 class="no-js-heading">3 · Run it</h4><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre>result = <b>Jazari</b>.open_run(target: target, actor_ref: <span class="s">"agent:nightly"</span>)
 run    = result[:run]
 
 <b>Jazari</b>.tick(run: run, expected_revision: run.lock_version,
@@ -506,131 +195,46 @@ run    = result[:run]
                  outcome: <span class="s">"completed"</span>)
 
 <span class="cm"># Every mutation carries the revision from the read before it.</span>
-<span class="cm"># Mismatch raises revision_conflict instead of overwriting.</span></pre></div>
-
-      <div class="pane" id="p4"><pre><b>Jazari</b>.last_run(target: target).outcome
+<span class="cm"># Mismatch raises revision_conflict instead of overwriting.</span></pre></div></section>
+        <section class="tab-panel" id="code-answer" role="tabpanel" aria-labelledby="code-answer-tab" hidden><h4 class="no-js-heading">4 · Answer</h4><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><b>Jazari</b>.last_run(target: target).outcome
 <span class="o">#=&gt; "completed"</span>
 
 <span class="cm"># resolve carries it too, so ONE read answers the question:</span>
 <b>Jazari</b>.resolve(target: target).last_run
 <span class="o">#=&gt; { id: 4412, outcome: "completed", open: false,</span>
-<span class="o">#     started_at: 2026-08-10 03:00:04 UTC, finished_at: ... }</span></pre></div>
-
-      <div class="pane" id="p5"><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.8.1"</span>
+<span class="o">#     started_at: 2026-08-10 03:00:04 UTC, finished_at: ... }</span></pre></div></section>
+        <section class="tab-panel" id="code-install" role="tabpanel" aria-labelledby="code-install-tab" hidden><h4 class="no-js-heading">Install</h4><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><span class="k">gem</span> <span class="s">"jazari"</span>, <span class="s">"~&gt; 0.8.1"</span>
 
 bin/rails generate jazari:install
 bin/rails db:migrate
 
 <span class="cm"># One migration, copied deliberately. Jazari never auto-appends</span>
 <span class="cm"># migrations — a shared table appearing in someone's next</span>
-<span class="cm"># db:migrate unasked is how a gem loses trust in a fleet.</span></pre></div>
-    </div>
-  </div>
+<span class="cm"># db:migrate unasked is how a gem loses trust in a fleet.</span></pre></div></section>
+      </div>
+    </section>
+  </div></div>
 </section>
 
-<!-- ══ runs: animated timeline + wheel ═══════════════════════════════════ -->
-<section class="band dark" id="runs">
-  <div class="wrap">
-    <p class="eyebrow rv">The escapement</p>
-    <h2 class="rv" style="margin-top:10px">Idempotency belongs to the ritual</h2>
-    <p class="lede rv muted" style="margin-top:16px">Verifying a backup should happen once a day.
-      Triaging an incident may happen five times. So there is no global rule — each recipe
-      declares its own.</p>
-
-    <div class="stage rv" id="stage" data-step="5">
-      <div class="tl">
-        <div class="ev e1"><span class="t">03:00:04</span><span class="d">cron calls <span class="mono">start</span>
-          <span class="m">INSERT first — a find-then-insert races</span></span></div>
-        <div class="ev e2"><span class="t">03:00:04</span><span class="d">run 4412 opens
-          <span class="m">created: true · idempotent_reuse: false</span></span></div>
-        <div class="ev e3"><span class="t">03:02:41</span><span class="d">network blip · cron retries
-          <span class="m">unique violation on the partial index</span></span></div>
-        <div class="ev e4"><span class="t">03:02:41</span><span class="d">run 4412 comes back
-          <span class="m">created: false · idempotent_reuse: true — it converges, it does not error</span></span></div>
-        <div class="ev e5"><span class="t">03:08:19</span><span class="d">closed · completed
-          <span class="m">3 ticks · 1 evidence · "4211 rows"</span></span></div>
-      </div>
-      <button class="replay" id="replay" type="button">Replay the night</button>
-    </div>
-
-    <figure class="rv">
-      <svg viewBox="0 0 880 200" role="img" aria-label="open_run inserts first, catches the unique violation, returns the existing run">
-        <g transform="translate(66,96)">
-          <g class="wheel">
-            <circle r="38" class="s-line"/><circle r="27" class="s-thin"/>
-            <g stroke="#4b4136" stroke-width="1.2">
-              <line x1="0" y1="-38" x2="0" y2="-27"/><line x1="0" y1="27" x2="0" y2="38"/>
-              <line x1="-38" y1="0" x2="-27" y2="0"/><line x1="27" y1="0" x2="38" y2="0"/>
-              <line x1="-27" y1="-27" x2="-19" y2="-19"/><line x1="19" y1="19" x2="27" y2="27"/>
-              <line x1="27" y1="-27" x2="19" y2="-19"/><line x1="-19" y1="19" x2="-27" y2="27"/>
-            </g>
-          </g>
-          <circle r="3.5" class="s-mad"/>
-        </g>
-        <text x="66" y="166" class="s-mono s-mut" text-anchor="middle">nightly, retrying</text>
-        <path d="M114 96 L184 96" class="s-line march" marker-end="url(#a)"/>
-        <rect x="184" y="66" width="164" height="60" class="s-line" fill="none"/>
-        <text x="266" y="92" class="s-ttl s-ink" text-anchor="middle">INSERT first</text>
-        <text x="266" y="111" class="s-mono s-mut" text-anchor="middle">then catch the violation</text>
-        <path d="M348 82 L446 44" class="s-line" marker-end="url(#a)"/>
-        <path d="M348 112 L446 152" class="s-line" marker-end="url(#a)"/>
-        <text x="464" y="40" class="s-ttl s-ink">new run</text>
-        <text x="464" y="59" class="s-mono s-mut">created: true</text>
-        <text x="464" y="150" class="s-ttl s-ink">the same run, returned</text>
-        <text x="464" y="169" class="s-mono s-mad">created: false · idempotent_reuse: true</text>
-        <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 z" fill="#4b4136"/></marker></defs>
-      </svg>
-    </figure>
-
-    <div class="split" style="margin-top:40px">
-      <div class="rv"><pre><span class="cm"># the recipe decides, not the system</span>
+<section class="folio night" id="runs" data-source-row="09" data-motion-role="timeline">
+  <div class="folio-grid"><aside class="rail"><span>Folio 06 · Night evidence</span></aside><div class="folio-body"><p class="eyebrow reveal">The escapement</p><h2 class="section-title reveal">Idempotency belongs to the ritual</h2><p class="lede reveal">Verifying a backup should happen once a day. Triaging an incident may happen five times. So there is no global rule — each recipe declares its own.</p>
+    <div class="event-sheet reveal" id="event-sheet"><div class="event-head"><span>Run 4412 / UTC</span><span>once_per_calendar_day</span></div><div class="event active"><time>03:00:04</time><p>cron calls <span class="mono">start</span><small>INSERT first — a find-then-insert races</small></p><span class="seal">✓</span></div><div class="event active"><time>03:00:04</time><p>run 4412 opens<small>created: true · idempotent_reuse: false</small></p><span class="seal">✓</span></div><div class="event active"><time>03:02:41</time><p>network blip · cron retries<small>unique violation on the partial index</small></p><span class="seal">✓</span></div><div class="event active"><time>03:02:41</time><p>run 4412 comes back<small>created: false · idempotent_reuse: true — it converges, it does not error</small></p><span class="seal">✓</span></div><div class="event active"><time>03:08:19</time><p>closed · completed<small>3 ticks · 1 evidence · "4211 rows"</small></p><span class="seal">✓</span></div><button class="replay" id="replay" type="button">Replay the night</button></div>
+    <div class="mechanism reveal" aria-label="INSERT-first route converging on a new or existing run"><span class="gear" aria-hidden="true"></span><div><div class="route-line" aria-hidden="true"></div><div class="route-labels"><span>INSERT first</span><span>new run</span><span>same run returned</span></div></div></div>
+    <div class="detail-grid"><div class="reveal"><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><span class="cm"># the recipe decides, not the system</span>
 run_policy: <span class="s">"unrestricted"</span>
-run_policy: <span class="s">"once_per_calendar_day"</span></pre></div>
-      <div class="rv">
-        <h3 style="margin-bottom:10px">Two details easy to get wrong</h3>
-        <p class="muted" style="font-size:14.5px">The index <span class="mono">COALESCE</span>s the
-          nullable polymorphic subject — otherwise queue runs are unconstrained entirely, because
-          <span class="mono">NULL != NULL</span>.</p>
-        <p class="muted" style="font-size:14.5px;margin:0">And the day is <strong>UTC</strong> via
-          <span class="mono">timestamptz</span>, so one nightly ritual cannot land on two different
-          days depending on which region’s machine called it.</p>
-      </div>
-    </div>
-
-    <div class="note rv" style="margin-top:34px;max-width:78ch">
-      <h3 style="margin-bottom:10px">A run records who acted</h3>
-      <p class="muted" style="font-size:14.5px">A checkbox can say what is done. A run also says
-        <strong>who</strong> did it. Pass an opaque <span class="mono">actor_ref</span> for a human,
-        agent, or job. Explicit identities win; trusted system jobs may inject a default when a run
-        opens, and later ticks or evidence inherit the run actor when omitted.</p>
-      <pre style="margin-top:16px"><span class="cm"># explicit identity for a human or agent</span>
+run_policy: <span class="s">"once_per_calendar_day"</span></pre></div></div><div class="reveal"><h3 class="subhead">Two details easy to get wrong</h3><p class="muted">The index <span class="mono">COALESCE</span>s the nullable polymorphic subject — otherwise queue runs are unconstrained entirely, because <span class="mono">NULL != NULL</span>.</p><p class="muted">And the day is <strong>UTC</strong> via <span class="mono">timestamptz</span>, so one nightly ritual cannot land on two different days depending on which region’s machine called it.</p></div></div>
+    <div class="annotation reveal"><h3 class="subhead">A run records who acted</h3><p class="muted">A checkbox can say what is done. A run also says <strong>who</strong> did it. Pass an opaque <span class="mono">actor_ref</span> for a human, agent, or job. Explicit identities win; trusted system jobs may inject a default when a run opens, and later ticks or evidence inherit the run actor when omitted.</p><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre><span class="cm"># explicit identity for a human or agent</span>
 <b>Jazari</b>.open_run(target: target, actor_ref: <span class="s">"user:42"</span>)
 <b>Jazari</b>.attach_evidence(run: run.reload, expected_revision: run.lock_version,
                        item_id: <span class="s">"restore"</span>, kind: <span class="s">"note"</span>,
                        value: <span class="s">"verified"</span>, actor_ref: <span class="s">"user:42"</span>)
 
 <span class="cm"># opt-in default for a trusted system job</span>
-<b>Jazari</b>.configure { |c| c.actor_ref = -&gt; { <span class="s">"system:nightly-backup"</span> } }</pre>
-    </div>
-  </div>
+<b>Jazari</b>.configure { |c| c.actor_ref = -&gt; { <span class="s">"system:nightly-backup"</span> } }</pre></div></div>
+  </div></div>
 </section>
 
-<!-- ══ mcp ═══════════════════════════════════════════════════════════════ -->
-<section class="band" id="mcp">
-  <div class="wrap">
-    <p class="eyebrow rv">Fitting it to your machine</p>
-    <h2 class="rv" style="margin-top:10px">Keep your own MCP tool</h2>
-    <div class="split" style="margin-top:26px">
-      <div class="rv">
-        <p>The MCP layer is optional — the dispatcher is not even loaded unless you ask for it.
-          If you already have a tool, absorb the actions into it and keep your own dispatch,
-          envelope, naming, and permissions.</p>
-        <p class="muted" style="font-size:14.5px">The descriptors are the single source of truth:
-          the shipped handler validates against the same list, so a published schema and the
-          implemented behaviour cannot drift.</p>
-      </div>
-      <div class="rv"><pre>frag = <b>Jazari::Mcp::Actions</b>.schema_fragment
+<section class="folio" id="mcp" data-source-row="10"><div class="folio-grid"><aside class="rail"><span>Folio 07 · Bound insert</span></aside><div class="folio-body"><p class="eyebrow reveal">Fitting it to your machine</p><h2 class="section-title reveal">Keep your own MCP tool</h2><div class="two-up" style="margin-top:2.5rem"><div class="body-copy reveal"><p>The MCP layer is optional — the dispatcher is not even loaded unless you ask for it. If you already have a tool, absorb the actions into it and keep your own dispatch, envelope, naming, and permissions.</p><p>The descriptors are the single source of truth: the shipped handler validates against the same list, so a published schema and the implemented behaviour cannot drift.</p></div><div class="bound-insert reveal" style="margin-top:0"><div class="code-wrap"><button class="copy-code" type="button">Copy</button><pre>frag = <b>Jazari::Mcp::Actions</b>.schema_fragment
 
 MY_TOOL[:properties][:action][:enum] += frag[:enum]
 MY_TOOL[:properties].merge!(frag[:properties])
@@ -639,140 +243,51 @@ MY_TOOL[:properties].merge!(frag[:properties])
 
 a = <b>Jazari::Mcp::Actions</b>.fetch(<span class="s">"reset"</span>)
 a.effect     <span class="o">#=&gt; :destructive</span>
-a.confirm?   <span class="o">#=&gt; true</span></pre></div>
-    </div>
-  </div>
-</section>
+a.confirm?   <span class="o">#=&gt; true</span></pre></div></div></div></div></div></section>
 
-<!-- ══ why ═══════════════════════════════════════════════════════════════ -->
-<section class="band alt" id="why">
-  <div class="wrap">
-    <p class="eyebrow rv">The name</p>
-    <h2 class="rv" style="margin-top:10px">Why “Jazari”</h2>
-    <div class="split" style="margin-top:26px">
-      <div class="rv">
-        <p>Ismail <strong>al-Jazari</strong> (1136–1206) was an engineer at the Artuqid court in
-          Diyarbakır. He built programmable automata — a hand-washing machine that offered you a
-          towel, a clock driven by a water wheel, pumps with the earliest known crankshafts.</p>
-        <p><strong>That is not why the gem carries his name.</strong></p>
-        <p class="muted" style="font-size:14.5px"><span class="mono">runbook</span> was already
-          taken on RubyGems — by a DSL for <em>executing</em> procedures, last released in 2021.
-          The name is occupied; the project is not one to build on.</p>
-      </div>
-      <div class="rv">
-        <div class="note" style="margin-top:0">
-          <p>He also wrote <em>The Book of Knowledge of Ingenious Mechanical Devices</em>, finished
-          the year he died: fifty machines, each with numbered construction steps and drawings
-          detailed enough that a stranger who had never met him could rebuild the device —
-          including, in his own words, the steps he had gotten wrong first.</p>
-        </div>
-        <p style="margin-top:18px">Eight hundred years later, people have built working machines
-          from those pages.</p>
-        <p style="margin:0">A procedure is not lore in someone’s head or prose in a document nobody
-          opens. It is a written, versioned, checkable artefact that somebody else can execute —
-          and prove they executed.</p>
-      </div>
-    </div>
-  </div>
-</section>
+<section class="folio colophon" id="why" data-source-row="10"><div class="folio-grid"><aside class="rail"><span>Folio 08 · Colophon</span></aside><div class="folio-body"><p class="eyebrow reveal">The name</p><h2 class="section-title reveal">Why “Jazari”</h2><div class="name-layout"><div class="body-copy reveal name-context"><p>Ismail <strong>al-Jazari</strong> (1136–1206) was an engineer at the Artuqid court in Diyarbakır. He built programmable automata — a hand-washing machine that offered you a towel, a clock driven by a water wheel, pumps with the earliest known crankshafts.</p><p><strong>That is not why the gem carries his name.</strong></p><p><span class="mono">runbook</span> was already taken on RubyGems — by a DSL for <em>executing</em> procedures, last released in 2021. The name is occupied; the project is not one to build on.</p></div><div class="reveal name-quote-panel"><blockquote class="name-quote">He also wrote <em>The Book of Knowledge of Ingenious Mechanical Devices</em>, finished the year he died: fifty machines, each with numbered construction steps and drawings detailed enough that a stranger who had never met him could rebuild the device — including, in his own words, the steps he had gotten wrong first.</blockquote></div><div class="body-copy reveal name-after"><p>Eight hundred years later, people have built working machines from those pages.</p><p>A procedure is not lore in someone’s head or prose in a document nobody opens. It is a written, versioned, checkable artefact that somebody else can execute — and prove they executed.</p></div></div></div></div></section>
 
-<!-- ══ scope + cta ═══════════════════════════════════════════════════════ -->
-<section class="band">
-  <div class="wrap narrow" style="text-align:center">
-    <p class="eyebrow rv">Scope</p>
-    <h2 class="rv" style="margin-top:10px">Not an execution framework</h2>
-    <p class="lede rv" style="margin:18px auto 0">Jazari holds the <em>state</em> of a procedure.
-      It does not SSH anywhere, shell out, or run your commands — execution is served by whatever
-      you already have. What none of them keep is a durable, addressable record of
-      <em>which procedure</em> ran, by whom, and what came back.</p>
-    <div class="cta rv" style="justify-content:center">
-      <a class="btn p" href="https://github.com/nauman/jazari">GitHub</a>
-      <a class="btn" href="https://jazari.kuickr.co/README.md">Seven guides</a>
-      <a class="btn" href="https://rubygems.org/gems/jazari">RubyGems</a>
-    </div>
-  </div>
-</section>
+<section class="folio" id="scope" data-source-row="11"><div class="folio-grid"><aside class="rail"><span>Folio 09 · Certificate</span></aside><div class="folio-body"><div class="certificate reveal"><p class="eyebrow">Scope</p><h2 class="section-title">Not an execution framework</h2><p class="lede">Jazari holds the <em>state</em> of a procedure. It does not SSH anywhere, shell out, or run your commands — execution is served by whatever you already have. What none of them keep is a durable, addressable record of <em>which procedure</em> ran, by whom, and what came back.</p><div class="cta-row"><a class="btn primary" href="https://github.com/nauman/jazari">GitHub</a><a class="btn" href="https://jazari.kuickr.co/README.md">Seven guides</a><a class="btn" href="https://rubygems.org/gems/jazari">RubyGems</a></div><div class="signature"><span>Caller executes</span><span>Jazari records procedure · actor · evidence</span><span>MIT</span></div></div></div></div></section>
+</main>
 
-<footer>
-  <div class="wrap">
-    <p style="margin:0"><span class="mono">gem install jazari</span> · MIT · built by
-      <a href="https://nauman.one">nauman.one</a> ·
-      <a href="https://x.com/naumanthanvi">X @naumanthanvi</a></p>
-  </div>
-</footer>
-
-<button class="themebtn" id="theme" type="button">Theme</button>
-
+<footer class="imprint" data-source-row="12"><div class="imprint-inner"><p><span class="mono">gem install jazari</span> · MIT · built by <a href="https://nauman.one">nauman.one</a> · <a href="https://x.com/naumanthanvi">X @naumanthanvi</a></p><p>Proof Ledger · private candidate</p></div></footer>
 <script>
 (function(){
-  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var root=document.documentElement,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try{var saved=localStorage.getItem('jazari-theme');if(saved==='dark'||saved==='light')root.dataset.theme=saved}catch(e){}
+  try{var savedLayout=localStorage.getItem('jazari-layout');root.dataset.layout=savedLayout==='boxed'?'boxed':'unboxed'}catch(e){root.dataset.layout='unboxed'}
+  var layoutToggle=document.getElementById('layout-toggle');
+  function layoutLabel(){var boxed=root.dataset.layout==='boxed';layoutToggle.textContent=boxed?'FULL':'BOX';layoutToggle.setAttribute('aria-label','Use '+(boxed?'unboxed':'boxed')+' layout');layoutToggle.title='Compare '+(boxed?'unboxed':'boxed')+' layout'}
+  layoutLabel();layoutToggle.addEventListener('click',function(){root.dataset.layout=root.dataset.layout==='boxed'?'unboxed':'boxed';try{localStorage.setItem('jazari-layout',root.dataset.layout)}catch(e){}layoutLabel()});
+  var theme=document.getElementById('theme');
+  function themeLabel(){var dark=root.dataset.theme==='dark';theme.textContent=dark?'LIGHT':'DARK';theme.setAttribute('aria-label','Switch to '+(dark?'light':'dark')+' ledger');theme.title=theme.getAttribute('aria-label')}
+  themeLabel();theme.addEventListener('click',function(){root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('jazari-theme',root.dataset.theme)}catch(e){}themeLabel()});
 
-  document.querySelectorAll('.kin').forEach(function(h){
-    var w = h.textContent.trim().split(' '); h.textContent = '';
-    w.forEach(function(x,i){ var s=document.createElement('span');
-      // A trailing plain space inside an inline-block is collapsed away, so the
-      // words run together. A non-breaking space survives and still copies.
-      s.textContent = x + '\u00a0'; s.style.animationDelay=(i*95)+'ms'; h.appendChild(s); });
-  });
-
-  function countUp(el){
-    var target = +el.dataset.count, n = 0, steps = 26;
-    if (reduce){ el.textContent = target; return; }
-    var iv = setInterval(function(){
-      n += Math.ceil(target/steps);
-      if (n >= target){ n = target; clearInterval(iv); }
-      el.textContent = n;
-    }, 34);
+  function setupScrollStory(story){
+    var argument=story.dataset.scrollStory==='argument',stepAttribute=argument?'data-progress-step':'data-system-beat',items=[].slice.call(story.querySelectorAll('['+stepAttribute+']')),plate=story.querySelector(argument?'.progress-stage':'.system-board'),count=story.querySelector(argument?'[data-stage-count]':'[data-system-count]');
+    function select(item){var step=item.getAttribute(stepAttribute),plateAttribute=argument?'data-step':'data-beat';if(plate.getAttribute(plateAttribute)===step&&item.classList.contains('is-current'))return;items.forEach(function(candidate){candidate.classList.toggle('is-current',candidate===item)});plate.setAttribute(plateAttribute,step);count.textContent=('0'+step).slice(-2)+' / '+('0'+items.length).slice(-2)}
+    if(reduce){if(!argument)plate.dataset.beat='all';items.forEach(function(item){item.classList.add('is-current')});return}
+    if(!argument){var ticking=false;function updateSystem(){ticking=false;var plateRect=plate.getBoundingClientRect(),focus=matchMedia('(max-width: 640px)').matches?Math.min(innerHeight-80,plateRect.bottom+80):innerHeight*.45,best=items[0],distance=Infinity;items.forEach(function(item){var rect=item.getBoundingClientRect(),next=focus>=rect.top&&focus<=rect.bottom?0:Math.abs((rect.top+rect.bottom)/2-focus);if(next<distance){distance=next;best=item}});select(best)}function queueSystem(){if(!ticking){ticking=true;requestAnimationFrame(updateSystem)}}addEventListener('scroll',queueSystem,{passive:true});addEventListener('resize',queueSystem);queueSystem();return}
+    if('IntersectionObserver' in window){var storyObserver=new IntersectionObserver(function(entries){var visible=entries.filter(function(entry){return entry.isIntersecting}).sort(function(a,b){return b.intersectionRatio-a.intersectionRatio});if(visible[0])select(visible[0].target)},{rootMargin:'-36% 0px -48% 0px',threshold:[0,.01,.25,.5]});items.forEach(function(item){storyObserver.observe(item)})}
   }
+  document.querySelectorAll('[data-scroll-story]').forEach(setupScrollStory);
 
-  var seen = new WeakSet();
-  function activate(el){
-    if (seen.has(el)) return; seen.add(el);
-    el.classList.add('in');
-    el.querySelectorAll('[data-count]').forEach(countUp);
-    el.querySelectorAll('.fill').forEach(function(f, i){
-      setTimeout(function(){ f.style.width = f.dataset.w + '%'; }, 120 + i*110);
-    });
-  }
+  function activate(el){el.classList.add('is-in');el.querySelectorAll('[data-count]').forEach(function(counter){if(counter.dataset.done)return;counter.dataset.done='true';var target=Number(counter.dataset.count||counter.textContent);if(reduce){counter.textContent=target;return}counter.textContent='0';var t0=performance.now(),duration=680;function tick(now){var p=Math.min((now-t0)/duration,1),v=Math.round(target*(1-Math.pow(1-p,4)));counter.textContent=v;if(p<1)requestAnimationFrame(tick)}requestAnimationFrame(tick)})}
+  if('IntersectionObserver' in window&&!reduce){var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){activate(entry.target);observer.unobserve(entry.target)}})},{threshold:.12});document.querySelectorAll('.reveal').forEach(function(el){observer.observe(el)})}else{document.querySelectorAll('.reveal').forEach(activate)}
+  var proofTest=document.getElementById('proof-test');if('IntersectionObserver' in window&&!reduce){var proofObserver=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){proofTest.classList.remove('animate-marks');void proofTest.offsetWidth;proofTest.classList.add('animate-marks')}else{proofTest.classList.remove('animate-marks')}})},{rootMargin:'-12% 0px -12% 0px',threshold:.15});proofObserver.observe(proofTest)}else{proofTest.classList.add('animate-marks')}
 
-  if ('IntersectionObserver' in window && !reduce){
-    var io = new IntersectionObserver(function(es){
-      es.forEach(function(e){ if(e.isIntersecting){ activate(e.target); io.unobserve(e.target); } });
-    }, {threshold:.15});
-    document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
-  } else {
-    document.querySelectorAll('.rv').forEach(activate);
-  }
+  function setupTabs(list){var tabs=[].slice.call(list.querySelectorAll(':scope > [role="tab"]'));function select(tab,focus){tabs.forEach(function(item){var on=item===tab;item.setAttribute('aria-selected',String(on));item.tabIndex=on?0:-1;var panel=document.getElementById(item.getAttribute('aria-controls'));if(panel)panel.hidden=!on});if(focus){tab.focus();tab.scrollIntoView({block:'nearest',inline:'nearest',behavior:reduce?'auto':'smooth'})}}tabs.forEach(function(tab,index){tab.addEventListener('click',function(){select(tab,false)});tab.addEventListener('keydown',function(event){var next=index;if(event.key==='ArrowRight')next=(index+1)%tabs.length;else if(event.key==='ArrowLeft')next=(index-1+tabs.length)%tabs.length;else if(event.key==='Home')next=0;else if(event.key==='End')next=tabs.length-1;else if(event.key==='Enter'||event.key===' '){event.preventDefault();select(tab,true);return}else return;event.preventDefault();select(tabs[next],true)})})}
+  document.querySelectorAll('.tablist').forEach(setupTabs);
+  function activateHashRoute(){var tab=location.hash==='#use'?document.getElementById('route-ruby-tab'):location.hash==='#standalone'?document.getElementById('route-standalone-tab'):null;if(tab){tab.click();requestAnimationFrame(function(){document.querySelector(location.hash).scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'})})}}
+  activateHashRoute();addEventListener('hashchange',activateHashRoute);
 
-  /* tabs */
-  document.querySelectorAll('.tab').forEach(function(t){
-    t.addEventListener('click', function(){
-      document.querySelectorAll('.tab').forEach(function(x){ x.setAttribute('aria-selected','false'); });
-      document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('on'); });
-      t.setAttribute('aria-selected','true');
-      document.getElementById(t.dataset.p).classList.add('on');
-    });
-  });
+  var copyStatus=document.createElement('span');copyStatus.className='skip';copyStatus.setAttribute('aria-live','polite');document.body.appendChild(copyStatus);
+  document.querySelectorAll('.copy-code').forEach(function(button){button.setAttribute('aria-label','Copy this code');button.addEventListener('click',function(){var pre=button.parentElement.querySelector('pre'),text=pre.innerText;function reset(){setTimeout(function(){button.textContent='Copy'},1200)}function selectCode(){var range=document.createRange();range.selectNodeContents(pre);var selection=getSelection();selection.removeAllRanges();selection.addRange(range);button.textContent='Code selected';copyStatus.textContent='Clipboard unavailable; code selected for manual copy';reset()}if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){button.textContent='Copied';copyStatus.textContent='Code copied';reset()}).catch(selectCode)}else selectCode()})});
 
-  /* timeline: JS advances a step, CSS reveals */
-  var stage = document.getElementById('stage'), timer;
-  function play(){
-    clearInterval(timer); var n = 0; stage.setAttribute('data-step','0');
-    timer = setInterval(function(){ stage.setAttribute('data-step', String(++n));
-      if (n >= 5) clearInterval(timer); }, 760);
-  }
-  document.getElementById('replay').addEventListener('click', play);
-  if (!reduce && 'IntersectionObserver' in window){
-    var once = new IntersectionObserver(function(es){
-      es.forEach(function(e){ if(e.isIntersecting){ play(); once.disconnect(); } });
-    }, {threshold:.3});
-    once.observe(stage);
-  }
-
-  document.getElementById('theme').addEventListener('click', function(){
-    var c = document.documentElement.getAttribute('data-theme');
-    document.documentElement.setAttribute('data-theme', c === 'dark' ? 'light' : 'dark');
-  });
+  var sheet=document.getElementById('event-sheet'),events=[].slice.call(sheet.querySelectorAll('.event')),replay=document.getElementById('replay'),timer;
+  function play(){clearInterval(timer);events.forEach(function(event){event.classList.remove('active')});if(reduce){events.forEach(function(event){event.classList.add('active')});return}var index=0;events[index++].classList.add('active');timer=setInterval(function(){events[index++].classList.add('active');if(index>=events.length)clearInterval(timer)},620)}
+  replay.addEventListener('click',play);
+  if(!reduce&&'IntersectionObserver' in window){var once=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){play();once.disconnect()}})},{threshold:.25});once.observe(sheet)}
 })();
 </script>
 </body>
