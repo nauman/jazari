@@ -80,7 +80,7 @@ html,body{overflow-x:clip}
   <div class="wrap head-inner">
     <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true"></span>jazari</a>
     <nav class="folio-nav" aria-label="Page folios">
-      <a href="#origin" data-n="02">Origin</a><a href="#layers" data-n="04">Model</a><a href="#standalone" data-n="05A">CLI &amp; JSON</a><a href="#use" data-n="05B">Usage</a><a href="#runs" data-n="06">Runs</a><a href="#mcp" data-n="07">MCP</a><a href="#why" data-n="08">Name</a><a href="#scope" data-n="09">Scope</a>
+      <a href="#demo" data-n="01A">Demo</a><a href="#origin" data-n="02">Origin</a><a href="#layers" data-n="04">Model</a><a href="#standalone" data-n="05A">CLI &amp; JSON</a><a href="#use" data-n="05B">Usage</a><a href="#runs" data-n="06">Runs</a><a href="#mcp" data-n="07">MCP</a><a href="#why" data-n="08">Name</a><a href="#scope" data-n="09">Scope</a>
     </nav>
     <div class="head-action"><button class="icon-button" id="layout-toggle" type="button" aria-label="Use boxed layout" title="Compare boxed layout">BOX</button><button class="icon-button" id="theme" type="button" aria-label="Switch to dark ledger" title="Switch theme">DARK</button><a class="github" href="https://github.com/nauman/jazari">GitHub</a></div>
   </div>
@@ -94,7 +94,7 @@ html,body{overflow-x:clip}
       <h1 class="display"><span class="hero-line">Procedures </span><span class="hero-line">you can </span><span class="hero-line"><em>call.</em></span></h1>
       <p class="lede">Not documents you hope someone reads. Ordered checklists as recipe data, per-subject runbooks, stable names for rituals that outlive any record, and per-run evidence — including <strong>who or what acted</strong> — so <em>“did last night’s run actually complete?”</em> is a query.</p>
       <p class="body-copy" style="margin-top:1.25rem">New in v0.8.0: run locally with a SQLite file, send and receive JSON, or connect an MCP client over stdio. No PostgreSQL server or Rails application needed. Ruby 3.2+ is required.</p>
-      <div class="cta-row"><a class="btn primary" href="https://rubygems.org/gems/jazari">gem install jazari</a><a class="btn" href="https://jazari.kuickr.co/README.md">Read the guides</a><a class="btn" href="#standalone">Try the CLI</a></div>
+      <div class="cta-row"><a class="btn primary" href="https://rubygems.org/gems/jazari">gem install jazari</a><a class="btn" href="https://jazari.kuickr.co/README.md">Read the guides</a><a class="btn" href="#standalone">Try the CLI</a><a class="btn" href="#demo">Watch the demo</a></div>
     </div>
     <div class="cover-proof">
       <article class="run-sheet" aria-label="Visual rendering of completed Run 4412">
@@ -107,6 +107,16 @@ html,body{overflow-x:clip}
       <div class="fact-register reveal" aria-label="Project facts"><div class="fact"><b data-count="4">4</b><span>layers</span></div><div class="fact"><b data-count="4">4</b><span>tables</span></div><div class="fact"><b data-count="135">135</b><span>tests</span></div><div class="fact"><b data-count="4">4</b><span>dependencies</span></div></div>
     </div>
     <div class="annotation reveal" style="grid-column:1/-1"><p><strong>State tells you what is done.</strong> Jazari runs also record the opaque <span class="mono">actor_ref</span> — a human, agent, or system job — and attach that identity to the evidence. Explicit actors win; trusted defaults and run inheritance keep automated procedures simple without losing attribution.</p></div>
+  </div></div>
+</section>
+
+<section class="folio" id="demo" aria-labelledby="demo-title">
+  <div class="folio-grid"><aside class="rail"><span>Folio 01A · Walkthrough</span></aside><div class="folio-body">
+    <p class="eyebrow">Jazari in 88 seconds</p><h2 class="section-title" id="demo-title">Did the procedure<br>actually happen?</h2>
+    <p class="lede">Follow a backup-verification recipe through a real local run: open it, attach the observed counts, reject a stale write, and query the completed evidence.</p>
+    <div style="margin-top:2.5rem;border:1px solid var(--rule);background:var(--sheet)"><div data-kuickr-embed="youtube:DeVDrVJhrqg"></div></div>
+    <p class="body-copy" style="margin-top:1rem;color:var(--soft);font-size:.9rem">The caller performs the backup and restore; Jazari records the procedure and evidence. Synthetic demo data · edited CLI output · AI-generated Aiden narration · English captions.</p>
+    <div class="cta-row"><a class="btn" href="https://www.youtube.com/watch?v=DeVDrVJhrqg" target="_blank" rel="noopener">Watch on YouTube</a><a class="btn" href="#standalone">Try it locally</a></div>
   </div></div>
 </section>
 
